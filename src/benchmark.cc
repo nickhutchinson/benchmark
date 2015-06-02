@@ -673,7 +673,9 @@ void ParseCommandLineFlags(int* argc, char** argv) {
 
       --(*argc);
       --i;
-    } else if (IsFlag(argv[i], "help")) {
+    } else if (IsFlag(argv[i], "help") || HasBenchmarkFlagPrefix(argv[i])) {
+      // Both the "help" flag and unrecognized Benchmark flags trigger help
+      // display.
       PrintUsageAndExit();
     }
   }

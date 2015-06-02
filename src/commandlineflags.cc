@@ -14,6 +14,7 @@
 
 #include "commandlineflags.h"
 
+#include <cassert>
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
@@ -216,5 +217,27 @@ bool IsTruthyFlagValue(const std::string& str) {
   char ch = str[0];
   return isalnum(ch) &&
          !(ch == '0' || ch == 'f' || ch == 'F' || ch == 'n' || ch == 'N');
+}
+
+// If |*pstr| begins with |prefix|, advance *pstr so that it points
+// just past the prefix, and return true. Otherwise, return false.
+static bool SkipPrefix(const char* prefix, const char** pstr) {
+  assert(prefix);
+  assert(pstr && *pstr);
+  const size_t prefix_len = strlen(prefix);
+  if (0 == strncmp(*pstr, prefix, prefix_len)) {
+    *pstr += prefix_len;
+    return true;
+  }
+  return false;
+}
+
+bool HasBenchmarkFlagPrefix(const std::string& str) {
+  const char* c_str = str.c_str();
+  return (SkipPrefix("--", &c_str) ||
+          SkipPrefix("-", &c_str) ||
+          SkipPrefix("/", &c_str)) &&
+         (SkipPrefix("benchmark_", &c_str) ||
+          SkipPrefix("benchmark-", &c_str));
 }
 }  // end namespace benchmark
