@@ -53,4 +53,16 @@
 # define BENCHMARK_BUILTIN_EXPECT(x, y) x
 #endif
 
+#ifndef BENCHMARK_API
+# if !defined(_WIN32)
+#   define BENCHMARK_API __attribute__((visibility("default")))
+# elif defined(BENCHMARK_DLL) && defined(BENCHMARK_BUILDING_BENCHMARK)
+#   define BENCHMARK_API __declspec(dllexport)
+# elif defined(BENCHMARK_DLL)
+#   define BENCHMARK_API __declspec(dllimport)
+# else
+#   define BENCHMARK_API
+# endif
+#endif  // BENCHMARK_API
+
 #endif  // BENCHMARK_MACROS_H_

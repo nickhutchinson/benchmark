@@ -33,6 +33,7 @@ install:
 
 script:
     - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS="-std=${STD}"
+          -DBUILD_SHARED_LIBS=1
     - make
     - make CTEST_OUTPUT_ON_FAILURE=1 test
 

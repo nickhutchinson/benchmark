@@ -125,6 +125,9 @@ else()
   add_cxx_compiler_flag(--coverage COVERAGE)
 endif()
 
+add_cxx_compiler_flag(-fvisibility=hidden)
+add_cxx_compiler_flag(-fvisibility-inlines-hidden)
+
 # C++ feature checks
 cxx_feature_check(STD_REGEX)
 cxx_feature_check(GNU_POSIX_REGEX)

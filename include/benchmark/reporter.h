@@ -29,7 +29,7 @@ namespace benchmark {
 // can control the destination of the reports by calling
 // RunSpecifiedBenchmarks and passing it a custom reporter object.
 // The reporter object must implement the following interface.
-class BenchmarkReporter {
+class BENCHMARK_API BenchmarkReporter {
  public:
   struct Context {
     int num_cpus;
@@ -155,7 +155,7 @@ class BenchmarkReporter {
 
 // Simple reporter that outputs benchmark data to the console. This is the
 // default reporter used by RunSpecifiedBenchmarks().
-class ConsoleReporter : public BenchmarkReporter {
+class BENCHMARK_API ConsoleReporter : public BenchmarkReporter {
  public:
   virtual bool ReportContext(const Context& context);
   virtual void ReportRuns(const std::vector<Run>& reports);
@@ -166,7 +166,7 @@ class ConsoleReporter : public BenchmarkReporter {
   size_t name_field_width_;
 };
 
-class JSONReporter : public BenchmarkReporter {
+class BENCHMARK_API JSONReporter : public BenchmarkReporter {
  public:
   JSONReporter() : first_report_(true) {}
   virtual bool ReportContext(const Context& context);
@@ -179,7 +179,7 @@ class JSONReporter : public BenchmarkReporter {
   bool first_report_;
 };
 
-class CSVReporter : public BenchmarkReporter {
+class BENCHMARK_API CSVReporter : public BenchmarkReporter {
  public:
   virtual bool ReportContext(const Context& context);
   virtual void ReportRuns(const std::vector<Run>& reports);

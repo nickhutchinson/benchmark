@@ -22,12 +22,19 @@ add_library(benchmark ${SOURCE_FILES} ${RE_FILES})
 
 set_target_properties(benchmark PROPERTIES
   OUTPUT_NAME "benchmark"
+  DEFINE_SYMBOL BENCHMARK_BUILDING_BENCHMARK
   VERSION ${GENERIC_LIB_VERSION}
   SOVERSION ${GENERIC_LIB_SOVERSION}
 )
 
+if (CMAKE_SYSTEM_NAME MATCHES Windows AND BUILD_SHARED_LIBS)
+  target_compile_definitions(benchmark PUBLIC -DBENCHMARK_DLL)
+endif ()
+
 # Link threads.
-target_link_libraries(benchmark ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(benchmark LINK_PRIVATE
+  ${CMAKE_THREAD_LIBS_INIT}
+)
 
 # We need extra libraries on Windows
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")

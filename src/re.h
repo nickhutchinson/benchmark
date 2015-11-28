@@ -26,11 +26,13 @@
 #endif
 #include <string>
 
+#include "internal_macros.h"
+
 namespace benchmark {
 
 // A wrapper around the POSIX regular expression API that provides automatic
 // cleanup
-class Regex {
+class BENCHMARK_API Regex {
  public:
   Regex();
   ~Regex();

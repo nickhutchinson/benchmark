@@ -12,7 +12,7 @@ namespace internal {
 
 typedef void(AbortHandlerT)();
 
-inline AbortHandlerT*& GetAbortHandler() {
+BENCHMARK_API inline AbortHandlerT*& GetAbortHandler() {
     static AbortHandlerT* handler = &std::abort;
     return handler;
 }

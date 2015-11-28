@@ -158,7 +158,7 @@ BENCHMARK(BM_test)->Unit(benchmark::kMillisecond);
 namespace benchmark {
 class BenchmarkReporter;
 
-void Initialize(int* argc, char** argv);
+BENCHMARK_API void Initialize(int* argc, char** argv);
 
 // Generate a list of benchmarks matching the specified --benchmark_filter flag
 // and if --benchmark_list_tests is specified return after printing the name
@@ -168,8 +168,8 @@ void Initialize(int* argc, char** argv);
 // The second overload reports the results using the specified 'reporter'.
 //
 // RETURNS: The number of matching benchmarks.
-size_t RunSpecifiedBenchmarks();
-size_t RunSpecifiedBenchmarks(BenchmarkReporter* reporter);
+BENCHMARK_API size_t RunSpecifiedBenchmarks();
+BENCHMARK_API size_t RunSpecifiedBenchmarks(BenchmarkReporter* reporter);
 
 
 // If this routine is called, peak memory allocation past this point in the
@@ -196,11 +196,11 @@ struct EnableIfString<T, typename Voider<typename T::basic_string>::type> {
     typedef int type;
 };
 
-void UseCharPointer(char const volatile*);
+BENCHMARK_API void UseCharPointer(char const volatile*);
 
 // Take ownership of the pointer and register the benchmark. Return the
 // registered benchmark.
-Benchmark* RegisterBenchmarkInternal(Benchmark*);
+BENCHMARK_API Benchmark* RegisterBenchmarkInternal(Benchmark*);
 
 } // end namespace internal
 
@@ -257,7 +257,7 @@ typedef double(BigOFunc)(int);
 
 // State is passed to a running Benchmark and contains state for the
 // benchmark to use.
-class State {
+class BENCHMARK_API State {
 public:
   State(size_t max_iters, bool has_x, int x, bool has_y, int y,
         int thread_i, int n_threads);
@@ -470,7 +470,7 @@ typedef void(Function)(State&);
 // be called on this object to change the properties of the benchmark.
 // Each method returns "this" so that multiple method calls can
 // chained into one expression.
-class Benchmark {
+class BENCHMARK_API Benchmark {
 public:
   virtual ~Benchmark();
 
@@ -590,7 +590,7 @@ private:
 
 // The class used to hold all Benchmarks created from static function.
 // (ie those created using the BENCHMARK(...) macros.
-class FunctionBenchmark : public Benchmark {
+class BENCHMARK_API FunctionBenchmark : public Benchmark {
 public:
     FunctionBenchmark(const char* name, Function* func)
         : Benchmark(name), func_(func)
@@ -604,7 +604,7 @@ private:
 }  // end namespace internal
 
 // The base class for all fixture tests.
-class Fixture: public internal::Benchmark {
+class BENCHMARK_API Fixture: public internal::Benchmark {
 public:
     Fixture() : internal::Benchmark("") {}
 
