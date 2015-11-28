@@ -11,6 +11,7 @@ endforeach()
 
 option(BENCHMARK_ENABLE_TESTING "Enable testing of the benchmark library." ON)
 option(BENCHMARK_ENABLE_LTO "Enable link time optimisation of the benchmark library." OFF)
+option(BENCHMARK_ENABLE_CXX11 "Whether to enable C++ mode" ON)
 # Make sure we can import out CMake functions
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -60,10 +61,30 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 else()
   # Try and enable C++11. Don't use C++14 because it doesn't work in some
   # configurations.
-  add_cxx_compiler_flag(-std=c++11)
-  if (NOT HAVE_CXX_FLAG_STD_CXX11)
-    add_cxx_compiler_flag(-std=c++0x)
-  endif()
+  if (BENCHMARK_ENABLE_CXX11)
+    add_cxx_compiler_flag(-std=c++11)
+    if (NOT HAVE_CXX_FLAG_STD_CXX11)
+      add_cxx_compiler_flag(-std=c++0x)
+    endif()
+  else ()
+    add_cxx_compiler_flag(-std=gnu++98)
+    add_definitions(-DBENCHMARK_NO_CXX11)
+
+    find_package(Boost REQUIRED COMPONENTS atomic thread chrono regex system)
+    set(HAVE_BOOST_REGEX 1)
+    add_definitions(-DHAVE_BOOST_REGEX)
+    set(HAVE_BOOST_CHRONO 1)
+    add_definitions(-DHAVE_BOOST_CHRONO)
+
+    include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+    link_libraries(${Boost_LIBRARIES})
+
+    if (CMAKE_SYSTEM_NAME MATCHES Windows)
+      add_definitions(-DBOOST_ALL_NO_LIB)
+    elseif (CMAKE_SYSTEM_NAME MATCHES Linux)
+      link_libraries(-lrt)
+    endif ()
+  endif ()
 
   # Turn compiler warnings up to 11
   add_cxx_compiler_flag(-Wall)
@@ -73,11 +94,20 @@ else()
   add_cxx_compiler_flag(-Werror RELEASE)
   add_cxx_compiler_flag(-Werror RELWITHDEBINFO)
   add_cxx_compiler_flag(-Werror MINSIZEREL)
-  add_cxx_compiler_flag(-pedantic)
-  add_cxx_compiler_flag(-pedantic-errors)
+  if (BENCHMARK_ENABLE_CXX11 OR NOT CMAKE_CXX_COMPILER_ID MATCHES GNU)
+    # With GCC, C++03 and -pedantic, invoking macros with no parameters triggers
+    # an unkillable warning.
+    add_cxx_compiler_flag(-pedantic)
+    add_cxx_compiler_flag(-pedantic-errors)
+  endif ()
   add_cxx_compiler_flag(-Wshorten-64-to-32)
   add_cxx_compiler_flag(-Wfloat-equal)
-  add_cxx_compiler_flag(-Wzero-as-null-pointer-constant)
+  if (BENCHMARK_ENABLE_CXX11)
+    add_cxx_compiler_flag(-Wzero-as-null-pointer-constant)
+  else ()
+    add_cxx_compiler_flag(-Wno-variadic-macros)
+    add_cxx_compiler_flag(-Wno-long-long)
+  endif ()
   add_cxx_compiler_flag(-fstrict-aliasing)
   if (HAVE_CXX_FLAG_FSTRICT_ALIASING)
     add_cxx_compiler_flag(-Wstrict-aliasing)
@@ -133,6 +163,10 @@ cxx_feature_check(STD_REGEX)
 cxx_feature_check(GNU_POSIX_REGEX)
 cxx_feature_check(POSIX_REGEX)
 cxx_feature_check(STEADY_CLOCK)
+
+cxx_feature_check(CXX11_NULLPTR)
+cxx_feature_check(CXX11_RANGE_BASED_FOR)
+cxx_feature_check(CXX11_STATIC_ASSERT)
 
 # Ensure we have pthreads
 find_package(Threads REQUIRED)

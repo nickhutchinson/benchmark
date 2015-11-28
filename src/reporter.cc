@@ -19,7 +19,6 @@
 
 #include <iostream>
 #include <vector>
-#include <tuple>
 
 #include "check.h"
 #include "stat.h"
@@ -37,7 +36,7 @@ BenchmarkReporter::~BenchmarkReporter() {
 void BenchmarkReporter::PrintBasicContext(std::ostream *out_ptr,
                                           Context const &context) {
   CHECK(out_ptr) << "cannot be null";
-  auto& Out = *out_ptr;
+  std::ostream& Out = *out_ptr;
 
   Out << "Run on (" << context.num_cpus << " X " << context.mhz_per_cpu
             << " MHz CPU " << ((context.num_cpus > 1) ? "s" : "") << ")\n";

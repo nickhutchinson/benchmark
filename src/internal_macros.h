@@ -37,4 +37,30 @@
 # define COMPILER_GCC
 #endif
 
+#if defined(HAVE_CXX11_RANGE_BASED_FOR)
+# define foreach(x, y) for (x : y)
+#else
+# include <boost/foreach.hpp>
+// See the following link for why the namespace is needed:
+// http://www.boost.org/doc/libs/1_59_0/doc/html/foreach.html#foreach.introduction.making__literal_boost_foreach__literal__prettier
+  namespace boost { namespace BOOST_FOREACH = foreach; }
+# define foreach   BOOST_FOREACH
+#endif
+
+#if !defined(HAVE_CXX11_NULLPTR)
+# undef nullptr
+# define nullptr NULL
+#endif
+
+#if !defined(HAVE_CXX11_STATIC_ASSERT)
+# include <boost/static_assert.hpp>
+# undef static_assert
+# if defined(__GNUC__)
+#   define static_assert(cond, msg) \
+        BOOST_STATIC_ASSERT_MSG((cond), (msg)) __attribute__((unused))
+# else
+#   define static_assert(cond, msg) BOOST_STATIC_ASSERT_MSG((cond), (msg))
+# endif
+#endif  // HAVE_CXX11_STATIC_ASSERT
+
 #endif // BENCHMARK_INTERNAL_MACROS_H_

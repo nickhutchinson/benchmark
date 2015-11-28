@@ -30,29 +30,30 @@
 #endif
 #endif
 
+#include <stdint.h>
+
 #include <cerrno>
 #include <cstdio>
-#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <limits>
-#include <mutex>
 
 #include "arraysize.h"
 #include "check.h"
 #include "cycleclock.h"
 #include "internal_macros.h"
 #include "log.h"
+#include "mutex.h"
 #include "sleep.h"
 #include "string_util.h"
 
 namespace benchmark {
 namespace {
-std::once_flag cpuinfo_init;
+detail::once_flag cpuinfo_init;
 double cpuinfo_cycles_per_second = 1.0;
 int cpuinfo_num_cpus = 1;  // Conservative guess
-std::mutex cputimens_mutex;
+Mutex cputimens_mutex;
 
 #if !defined BENCHMARK_OS_MACOSX
 const int64_t estimate_time_ms = 1000;
@@ -345,7 +346,7 @@ static bool MyCPUUsageCPUTimeNsLocked(double* cputime) {
 double MyCPUUsage() {
 #ifndef BENCHMARK_OS_WINDOWS
   {
-    std::lock_guard<std::mutex> l(cputimens_mutex);
+    MutexLock l(cputimens_mutex);
     static bool use_cputime_ns = true;
     if (use_cputime_ns) {
       double value;
@@ -379,12 +380,12 @@ double ChildrenCPUUsage() {
 }
 
 double CyclesPerSecond(void) {
-  std::call_once(cpuinfo_init, InitializeSystemInfo);
+  detail::call_once(cpuinfo_init, InitializeSystemInfo);
   return cpuinfo_cycles_per_second;
 }
 
 int NumCPUs(void) {
-  std::call_once(cpuinfo_init, InitializeSystemInfo);
+  detail::call_once(cpuinfo_init, InitializeSystemInfo);
   return cpuinfo_num_cpus;
 }
 

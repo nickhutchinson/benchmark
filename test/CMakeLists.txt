@@ -2,6 +2,10 @@
 
 find_package(Threads REQUIRED)
 
+if (NOT BENCHMARK_ENABLE_CXX11)
+  add_definitions(-Dnullptr=NULL)
+endif()
+
 macro(compile_benchmark_test name)
   add_executable(${name} "${name}.cc")
   target_link_libraries(${name} benchmark ${CMAKE_THREAD_LIBS_INIT})
@@ -36,8 +40,10 @@ add_test(basic_benchmark basic_test --benchmark_min_time=0.01)
 compile_benchmark_test(diagnostics_test)
 add_test(diagnostics_test diagnostics_test --benchmark_min_time=0.01)
 
-compile_benchmark_test(skip_with_error_test)
-add_test(skip_with_error_test skip_with_error_test --benchmark_min_time=0.01)
+if (BENCHMARK_ENABLE_CXX11)
+  compile_benchmark_test(skip_with_error_test)
+  add_test(skip_with_error_test skip_with_error_test --benchmark_min_time=0.01)
+endif()
 
 compile_benchmark_test(donotoptimize_test)
 add_test(donotoptimize_test donotoptimize_test --benchmark_min_time=0.01)
@@ -48,8 +54,10 @@ add_test(fixture_test fixture_test --benchmark_min_time=0.01)
 compile_benchmark_test(map_test)
 add_test(map_test map_test --benchmark_min_time=0.01)
 
-compile_benchmark_test(reporter_output_test)
-add_test(reporter_output_test reporter_output_test --benchmark_min_time=0.01)
+if (BENCHMARK_ENABLE_CXX11)
+  compile_benchmark_test(reporter_output_test)
+  add_test(reporter_output_test reporter_output_test --benchmark_min_time=0.01)
+endif()
 
 check_cxx_compiler_flag(-std=c++03 BENCHMARK_HAS_CXX03_FLAG)
 if (BENCHMARK_HAS_CXX03_FLAG)
@@ -63,8 +71,10 @@ if (BENCHMARK_HAS_CXX03_FLAG)
   add_test(cxx03 cxx03_test --benchmark_min_time=0.01)
 endif()
 
-compile_benchmark_test(complexity_test)
-add_test(complexity_benchmark complexity_test --benchmark_min_time=0.01)
+if (BENCHMARK_ENABLE_CXX11)
+  compile_benchmark_test(complexity_test)
+  add_test(complexity_benchmark complexity_test --benchmark_min_time=0.01)
+endif()
 
 # Add the coverage command(s)
 if(CMAKE_BUILD_TYPE)

@@ -23,24 +23,37 @@
 #include "complexity.h"
 #include "stat.h"
 
+#if !defined(BENCHMARK_NO_CXX11)
+using std::log2;
+#endif
+
 namespace benchmark {
 
 // Internal function to calculate the different scalability forms
 BigOFunc* FittingCurve(BigO complexity) {
+  struct Curves {
+    static double oN(int n) { return n; };
+    static double oNSquared(int n) { return n * n; };
+    static double oNCubed(int n) { return n * n * n; };
+    static double oLogN(int n) { return log2(n); };
+    static double oNLogN(int n) { return n * log2(n); };
+    static double o1(int) { return 1.0; };
+  };
+
   switch (complexity) {
     case oN:
-      return [](int n) -> double { return n; };
+      return Curves::oN;
     case oNSquared:
-      return [](int n) -> double { return n * n; };
+      return Curves::oNSquared;
     case oNCubed:
-      return [](int n) -> double { return n * n * n; };
+      return Curves::oNCubed;
     case oLogN:
-      return [](int n) { return std::log2(n); };
+      return Curves::oLogN;
     case oNLogN:
-      return [](int n) { return n * std::log2(n); };
+      return Curves::oNLogN;
     case o1:
     default:
-      return [](int) { return 1.0; };
+      return Curves::o1;
   }
 }
 
@@ -129,14 +142,14 @@ LeastSq MinimalLeastSq(const std::vector<int>& n,
   LeastSq best_fit;
 
   if (complexity == oAuto) {
-    std::vector<BigO> fit_curves = {oLogN, oN, oNLogN, oNSquared, oNCubed};
+    const BigO fit_curves[] = {oLogN, oN, oNLogN, oNSquared, oNCubed};
 
     // Take o1 as default best fitting curve
     best_fit = MinimalLeastSq(n, time, FittingCurve(o1));
     best_fit.complexity = o1;
 
     // Compute all possible fitting curves and stick to the best one
-    for (const auto& fit : fit_curves) {
+    foreach (const BigO& fit, fit_curves) {
       LeastSq current_fit = MinimalLeastSq(n, time, FittingCurve(fit));
       if (current_fit.rms < best_fit.rms) {
         best_fit = current_fit;
@@ -156,9 +169,9 @@ std::vector<BenchmarkReporter::Run> ComputeStats(
   typedef BenchmarkReporter::Run Run;
   std::vector<Run> results;
 
-  auto error_count =
-      std::count_if(reports.begin(), reports.end(),
-                    [](Run const& run) { return run.error_occurred; });
+  size_t error_count = 0;
+  foreach (const Run& run, reports)
+    error_count += run.error_occurred;
 
   if (reports.size() - error_count < 2) {
     // We don't report aggregated data if there was a single run.
@@ -174,7 +187,7 @@ std::vector<BenchmarkReporter::Run> ComputeStats(
   int64_t const run_iterations = reports.front().iterations;
 
   // Populate the accumulators.
-  for (Run const& run : reports) {
+  foreach (Run const& run, reports) {
     CHECK_EQ(reports[0].benchmark_name, run.benchmark_name);
     CHECK_EQ(run_iterations, run.iterations);
     if (run.error_occurred) continue;
@@ -233,7 +246,7 @@ std::vector<BenchmarkReporter::Run> ComputeBigO(
   std::vector<double> cpu_time;
 
   // Populate the accumulators.
-  for (const Run& run : reports) {
+  foreach (const Run& run, reports) {
     n.push_back(run.complexity_n);
     real_time.push_back(run.real_accumulated_time / run.iterations);
     cpu_time.push_back(run.cpu_accumulated_time / run.iterations);

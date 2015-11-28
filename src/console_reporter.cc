@@ -15,12 +15,12 @@
 #include "benchmark/reporter.h"
 #include "complexity.h"
 
+#include <stdint.h>
+
 #include <algorithm>
-#include <cstdint>
 #include <cstdio>
 #include <iostream>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include "check.h"
@@ -55,14 +55,14 @@ bool ConsoleReporter::ReportContext(const Context& context) {
 }
 
 void ConsoleReporter::ReportRuns(const std::vector<Run>& reports) {
-  for (const auto& run : reports)
+  foreach (const Run& run, reports)
     PrintRunData(run);
 }
 
 void ConsoleReporter::PrintRunData(const Run& result) {
-  auto& Out = GetOutputStream();
+  std::ostream& Out = GetOutputStream();
 
-  auto name_color =
+  LogColor name_color =
       (result.report_big_o || result.report_rms) ? COLOR_BLUE : COLOR_GREEN;
   ColorPrintf(Out, name_color, "%-*s ", name_field_width_,
               result.benchmark_name.c_str());

@@ -4,10 +4,24 @@
 #include <cmath>
 #include <limits>
 #include <ostream>
-#include <type_traits>
+#include "internal_macros.h"
 
+#ifndef BENCHMARK_NO_CXX11
+# include <type_traits>
+#else
+# include <boost/type_traits.hpp>
+#endif
 
 namespace benchmark {
+namespace detail {
+#ifndef BENCHMARK_NO_CXX11
+using std::is_same;
+using std::is_integral;
+#else
+using boost::is_same;
+using boost::is_integral;
+#endif  // BENCHMARK_NO_CXX11
+}  // namespace detail
 
 template <typename VType, typename NumType>
 class Stat1;
@@ -135,8 +149,8 @@ class Stat1 {
   }
 
  private:
-  static_assert(std::is_integral<NumType>::value &&
-                !std::is_same<NumType, bool>::value,
+  static_assert((detail::is_integral<NumType>::value &&
+                !detail::is_same<NumType, bool>::value),
                 "NumType must be an integral type that is not bool.");
   // Let i be the index of the samples provided (using +=)
   // and weight[i],value[i] be the data of sample #i

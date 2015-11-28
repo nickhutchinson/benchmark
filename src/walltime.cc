@@ -23,14 +23,20 @@
 #include <sys/time.h>
 #endif
 
+#include <stdint.h>
+
 #include <cstdio>
-#include <cstdint>
 #include <cstring>
 #include <ctime>
+#include <limits>
 
+#ifndef BENCHMARK_NO_CXX11
 #include <atomic>
 #include <chrono>
-#include <limits>
+#else
+#include <boost/atomic.hpp>
+#include <boost/chrono.hpp>
+#endif
 
 #include "arraysize.h"
 #include "check.h"
@@ -38,20 +44,30 @@
 #include "log.h"
 #include "sysinfo.h"
 
+namespace {
+#ifndef BENCHMARK_NO_CXX11
+namespace chrono = std::chrono;
+using std::atomic;
+
+#else
+namespace chrono = boost::chrono;
+using boost::atomic;
+#endif  // BENCHMARK_NO_CXX11
+}
+
 namespace benchmark {
 namespace walltime {
-
 namespace {
 
-#if defined(HAVE_STEADY_CLOCK)
-template <bool HighResIsSteady = std::chrono::high_resolution_clock::is_steady>
+#if defined(HAVE_STEADY_CLOCK) || defined(HAVE_BOOST_CHRONO)
+template <bool HighResIsSteady = chrono::high_resolution_clock::is_steady>
 struct ChooseSteadyClock {
-    typedef std::chrono::high_resolution_clock type;
+    typedef chrono::high_resolution_clock type;
 };
 
 template <>
 struct ChooseSteadyClock<false> {
-    typedef std::chrono::steady_clock type;
+    typedef chrono::steady_clock type;
 };
 #endif
 
@@ -59,7 +75,7 @@ struct ChooseClockType {
 #if defined(HAVE_STEADY_CLOCK)
   typedef ChooseSteadyClock<>::type type;
 #else
-  typedef std::chrono::high_resolution_clock type;
+  typedef chrono::high_resolution_clock type;
 #endif
 };
 
@@ -81,12 +97,12 @@ private:
   void SetDrift(float f) {
     int32_t w;
     memcpy(&w, &f, sizeof(f));
-    std::atomic_store(&drift_adjust_, w);
+    drift_adjust_.store(w);
   }
 
   float GetDrift() const {
     float f;
-    int32_t w = std::atomic_load(&drift_adjust_);
+    int32_t w = drift_adjust_.load();
     memcpy(&f, &w, sizeof(f));
     return f;
   }
@@ -121,7 +137,7 @@ private:
   int64_t cycles_per_second_;
   double seconds_per_cycle_;
   uint32_t last_adjust_time_;
-  std::atomic<int32_t> drift_adjust_;
+  atomic<int32_t> drift_adjust_;
   int64_t max_interval_cycles_;
 
   BENCHMARK_DISALLOW_COPY_AND_ASSIGN(WallTimeImp);
@@ -185,12 +201,12 @@ WallTime CPUWalltimeNow() {
 
 WallTime ChronoWalltimeNow() {
   typedef ChooseClockType::type Clock;
-  typedef std::chrono::duration<WallTime, std::chrono::seconds::period>
+  typedef chrono::duration<WallTime, chrono::seconds::period>
           FPSeconds;
-  static_assert(std::chrono::treat_as_floating_point<WallTime>::value,
+  static_assert(chrono::treat_as_floating_point<WallTime>::value,
                 "This type must be treated as a floating point type.");
-  auto now = Clock::now().time_since_epoch();
-  return std::chrono::duration_cast<FPSeconds>(now).count();
+  Clock::duration now = Clock::now().time_since_epoch();
+  return chrono::duration_cast<FPSeconds>(now).count();
 }
 
 bool UseCpuCycleClock() {
@@ -225,7 +241,7 @@ WallTime Now()
 namespace {
 
 std::string DateTimeString(bool local) {
-  typedef std::chrono::system_clock Clock;
+  typedef chrono::system_clock Clock;
   std::time_t now = Clock::to_time_t(Clock::now());
   char storage[128];
   std::size_t written;

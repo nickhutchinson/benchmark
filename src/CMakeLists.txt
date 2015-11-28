@@ -7,7 +7,7 @@ set(SOURCE_FILES "benchmark.cc" "colorprint.cc" "commandlineflags.cc"
                  "log.cc" "reporter.cc" "sleep.cc" "string_util.cc"
                  "sysinfo.cc" "walltime.cc" "complexity.cc")
 # Determine the correct regular expression engine to use
-if(HAVE_STD_REGEX)
+if(HAVE_STD_REGEX OR HAVE_BOOST_REGEX)
   set(RE_FILES "re_std.cc")
 elseif(HAVE_GNU_POSIX_REGEX)
   set(RE_FILES "re_posix.cc")

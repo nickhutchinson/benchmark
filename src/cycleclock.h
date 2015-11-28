@@ -21,7 +21,7 @@
 #ifndef BENCHMARK_CYCLECLOCK_H_
 #define BENCHMARK_CYCLECLOCK_H_
 
-#include <cstdint>
+#include <stdint.h>
 
 #include "benchmark/macros.h"
 #include "internal_macros.h"

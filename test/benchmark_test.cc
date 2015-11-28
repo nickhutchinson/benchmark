@@ -9,14 +9,32 @@
 #include <limits>
 #include <list>
 #include <map>
-#include <mutex>
 #include <set>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <chrono>
-#include <thread>
 #include <utility>
+
+#if !defined(BENCHMARK_NO_CXX11) && \
+        (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)
+#include <chrono>
+#include <mutex>
+#include <thread>
+namespace chrono = std::chrono;
+namespace this_thread = std::this_thread;
+using std::lock_guard;
+using std::micro;
+using std::mutex;
+#else
+#include <boost/chrono.hpp>
+#include <boost/thread.hpp>
+namespace chrono = boost::chrono;
+namespace this_thread = boost::this_thread;
+using boost::lock_guard;
+using boost::micro;
+using boost::mutex;
+#endif  // !defined(BENCHMARK_NO_CXX11) && (defined(__GXX_EXPERIMENTAL_CXX0X__)
+        // || __cplusplus >= 201103L)
 
 #if defined(__GNUC__)
 # define BENCHMARK_NOINLINE __attribute__((noinline))
@@ -47,7 +65,7 @@ std::set<int> ConstructRandomSet(int size) {
   return s;
 }
 
-std::mutex test_vector_mu;
+mutex test_vector_mu;
 std::vector<int>* test_vector = nullptr;
 
 }  // end namespace
@@ -97,7 +115,7 @@ static void BM_SetInsert(benchmark::State& state) {
 }
 BENCHMARK(BM_SetInsert)->RangePair(1<<10,8<<10, 1,10);
 
-template<typename Container, typename ValueType = typename Container::value_type>
+template<typename Container, typename ValueType>
 static void BM_Sequential(benchmark::State& state) {
   ValueType v = 42;
   while (state.KeepRunning()) {
@@ -110,7 +128,7 @@ static void BM_Sequential(benchmark::State& state) {
   state.SetBytesProcessed(items_processed * sizeof(v));
 }
 BENCHMARK_TEMPLATE2(BM_Sequential, std::vector<int>, int)->Range(1 << 0, 1 << 10);
-BENCHMARK_TEMPLATE(BM_Sequential, std::list<int>)->Range(1 << 0, 1 << 10);
+BENCHMARK_TEMPLATE2(BM_Sequential, std::list<int>, int)->Range(1 << 0, 1 << 10);
 // Test the variadic version of BENCHMARK_TEMPLATE in C++11 and beyond.
 #if __cplusplus >= 201103L
 BENCHMARK_TEMPLATE(BM_Sequential, std::vector<int>, int)->Arg(512);
@@ -131,7 +149,7 @@ static void BM_SetupTeardown(benchmark::State& state) {
   }
   int i = 0;
   while (state.KeepRunning()) {
-    std::lock_guard<std::mutex> l(test_vector_mu);
+    lock_guard<mutex> l(test_vector_mu);
     if (i%2 == 0)
       test_vector->push_back(i);
     else
@@ -180,19 +198,20 @@ BENCHMARK(BM_ParallelMemset)->Arg(10 << 20)->ThreadRange(1, 4);
 static void BM_ManualTiming(benchmark::State& state) {
   size_t slept_for = 0;
   int microseconds = state.range_x();
-  std::chrono::duration<double, std::micro> sleep_duration {
-    static_cast<double>(microseconds)
-  };
+  chrono::duration<double, micro> sleep_duration(
+    static_cast<double>(microseconds));
 
   while (state.KeepRunning()) {
-    auto start   = std::chrono::high_resolution_clock::now();
+    chrono::high_resolution_clock::time_point start =
+        chrono::high_resolution_clock::now();
     // Simulate some useful workload with a sleep
-    std::this_thread::sleep_for(std::chrono::duration_cast<
-      std::chrono::nanoseconds>(sleep_duration));
-    auto end     = std::chrono::high_resolution_clock::now();
+    this_thread::sleep_for(
+        chrono::duration_cast<chrono::nanoseconds>(sleep_duration));
+    chrono::high_resolution_clock::time_point end =
+        chrono::high_resolution_clock::now();
 
-    auto elapsed =
-      std::chrono::duration_cast<std::chrono::duration<double>>(
+    chrono::duration<double> elapsed =
+      chrono::duration_cast<chrono::duration<double> >(
         end - start);
 
     state.SetIterationTime(elapsed.count());
@@ -221,4 +240,3 @@ BENCHMARK_CAPTURE(BM_non_template_args, basic_test, 0, 0);
 #endif // __cplusplus >= 201103L
 
 BENCHMARK_MAIN()
-

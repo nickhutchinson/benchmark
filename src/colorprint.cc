@@ -16,9 +16,8 @@
 
 #include <cstdarg>
 #include <cstdio>
-#include <cstdarg>
 #include <string>
-#include <memory>
+#include <vector>
 
 #include "commandlineflags.h"
 #include "check.h"
@@ -88,7 +87,7 @@ std::string FormatString(const char *msg, va_list args) {
 
   std::size_t size = 256;
   char local_buff[256];
-  auto ret = std::vsnprintf(local_buff, size, msg, args_cp);
+  int ret = std::vsnprintf(local_buff, size, msg, args_cp);
 
   va_end(args_cp);
 
@@ -96,23 +95,23 @@ std::string FormatString(const char *msg, va_list args) {
   CHECK(ret >= 0);
 
   if (ret == 0) // handle empty expansion
-    return {};
+    return std::string();
   else if (static_cast<size_t>(ret) < size)
     return local_buff;
   else {
     // we did not provide a long enough buffer on our first attempt.
     size = (size_t)ret + 1; // + 1 for the null byte
-    std::unique_ptr<char[]> buff(new char[size]);
-    ret = std::vsnprintf(buff.get(), size, msg, args);
+    std::vector<char> buff(size);
+    ret = std::vsnprintf(buff.data(), size, msg, args);
     CHECK(ret > 0 && ((size_t)ret) < size);
-    return buff.get();
+    return buff.data();
   }
 }
 
 std::string FormatString(const char *msg, ...) {
   va_list args;
   va_start(args, msg);
-  auto tmp = FormatString(msg, args);
+  std::string tmp = FormatString(msg, args);
   va_end(args);
   return tmp;
 }

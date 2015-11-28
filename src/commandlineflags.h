@@ -1,7 +1,7 @@
 #ifndef BENCHMARK_COMMANDLINEFLAGS_H_
 #define BENCHMARK_COMMANDLINEFLAGS_H_
 
-#include <cstdint>
+#include <stdint.h>
 #include <string>
 
 // Macro for referencing flags.

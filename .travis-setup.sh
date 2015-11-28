@@ -3,7 +3,9 @@
 # Before install
 
 sudo add-apt-repository -y ppa:kalakris/cmake
-if [ "$STD" = "c++11" ]; then
+if [ "$STD" = "c++03" ]; then
+    sudo apt-add-repository -y ppa:boost-latest/ppa
+elif [ "$STD" = "c++11" ]; then
     sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     if [ "$CXX" = "clang++" ]; then
         wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
@@ -23,4 +25,14 @@ elif [ "$CXX" = "clang++" ]; then
     sudo update-alternatives --install /usr/local/bin/clang   clang   /usr/bin/clang-3.6 90
     sudo update-alternatives --install /usr/local/bin/clang++ clang++ /usr/bin/clang++-3.6 90
     export PATH=/usr/local/bin:$PATH
+fi
+
+if [ "$STD" = "c++03" ]; then
+    sudo apt-get install -qq    \
+        libboost1.55-dev        \
+        libboost-atomic1.55-dev \
+        libboost-chrono1.55-dev \
+        libboost-regex1.55-dev  \
+        libboost-system1.55-dev \
+        libboost-thread1.55-dev
 fi

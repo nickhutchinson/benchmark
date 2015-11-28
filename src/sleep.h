@@ -1,7 +1,7 @@
 #ifndef BENCHMARK_SLEEP_H_
 #define BENCHMARK_SLEEP_H_
 
-#include <cstdint>
+#include <stdint.h>
 
 namespace benchmark {
 const int64_t kNumMillisPerSecond = 1000LL;

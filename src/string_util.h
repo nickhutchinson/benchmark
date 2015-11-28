@@ -14,6 +14,7 @@ std::string HumanReadableNumber(double n);
 
 std::string StringPrintF(const char* format, ...);
 
+#ifndef BENCHMARK_NO_CXX11
 inline std::ostream&
 StringCatImp(std::ostream& out) BENCHMARK_NOEXCEPT
 {
@@ -35,6 +36,37 @@ inline std::string StrCat(Args&&... args)
   StringCatImp(ss, std::forward<Args>(args)...);
   return ss.str();
 }
+#else
+
+inline std::string StrCat() { return std::string(); }
+
+template <class T>
+inline std::string StrCat(const T& t) {
+  std::ostringstream ss;
+  ss << t;
+  return ss.str();
+}
+
+template <class T, class U>
+inline std::string StrCat(const T& t, const U& u) {
+  std::ostringstream ss;
+  ss << t << u;
+  return ss.str();
+}
+template <class T, class U, class V>
+inline std::string StrCat(const T& t, const U& u, const V& v) {
+  std::ostringstream ss;
+  ss << t << u << v;
+  return ss.str();
+}
+
+template <class T, class U, class V, class W>
+inline std::string StrCat(const T& t, const U& u, const V& v, const W& w) {
+  std::ostringstream ss;
+  ss << t << u << v << w;
+  return ss.str();
+}
+#endif
 
 void ReplaceAll(std::string* str, const std::string& from,
                 const std::string& to);

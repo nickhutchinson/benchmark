@@ -15,11 +15,11 @@
 #include "benchmark/reporter.h"
 #include "complexity.h"
 
+#include <stdint.h>
+
 #include <algorithm>
-#include <cstdint>
 #include <iostream>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include "string_util.h"
@@ -99,11 +99,12 @@ void JSONReporter::ReportRuns(std::vector<Run> const& reports) {
   }
   first_report_ = false;
 
-  for (auto it = reports.begin(); it != reports.end(); ++it) {
+  typedef std::vector<Run>::const_iterator ReportsIt;
+  for (ReportsIt it = reports.begin(); it != reports.end(); ++it) {
     out << indent << "{\n";
     PrintRunData(*it);
     out << indent << '}';
-    auto it_cp = it;
+    ReportsIt it_cp = it;
     if (++it_cp != reports.end()) {
       out << ",\n";
     }

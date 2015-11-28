@@ -1,8 +1,12 @@
 #ifndef BENCHMARK_MUTEX_H_
 #define BENCHMARK_MUTEX_H_
 
+#ifndef BENCHMARK_NO_CXX11
 #include <mutex>
 #include <condition_variable>
+#else
+#include <boost/thread.hpp>
+#endif
 
 // Enable thread safety attributes only with clang.
 // The attributes can be safely erased when compiling with other compilers.
@@ -71,8 +75,23 @@
 
 
 namespace benchmark {
+namespace detail {
+#ifndef BENCHMARK_NO_CXX11
+  using std::call_once;
+  using std::condition_variable;
+  using std::mutex;
+  using std::once_flag;
+  using std::unique_lock;
+#else
+  using boost::call_once;
+  using boost::condition_variable;
+  using boost::mutex;
+  using boost::once_flag;
+  using boost::unique_lock;
+#endif
+}
 
-typedef std::condition_variable Condition;
+typedef detail::condition_variable Condition;
 
 // NOTE: Wrappers for std::mutex and std::unique_lock are provided so that
 // we can annotate them with thread safety attributes and use the
@@ -85,17 +104,17 @@ public:
 
   void lock() ACQUIRE() { mut_.lock(); }
   void unlock() RELEASE() { mut_.unlock(); }
-  std::mutex& native_handle() {
+  detail::mutex& native_handle() {
     return mut_;
   }
 private:
-  std::mutex mut_;
+  detail::mutex mut_;
 };
 
 
 class SCOPED_CAPABILITY MutexLock
 {
-  typedef std::unique_lock<std::mutex> MutexLockImp;
+  typedef detail::unique_lock<detail::mutex> MutexLockImp;
 public:
   MutexLock(Mutex& m) ACQUIRE(m) : ml_(m.native_handle())
   { }
@@ -113,10 +132,9 @@ public:
 
   void WaitForNotification() const EXCLUDES(mutex_) {
     MutexLock m_lock(mutex_);
-    auto notified_fn = [this]() REQUIRES(mutex_) {
-                            return this->HasBeenNotified();
-                        };
-    cv_.wait(m_lock.native_handle(), notified_fn);
+    while (!this->HasBeenNotified()) {
+      cv_.wait(m_lock.native_handle());
+    }
   }
 
   void Notify() EXCLUDES(mutex_) {
@@ -133,7 +151,7 @@ private:
   }
 
   mutable Mutex mutex_;
-  mutable std::condition_variable cv_;
+  mutable detail::condition_variable cv_;
   bool notified_yet_ GUARDED_BY(mutex_);
 };
 

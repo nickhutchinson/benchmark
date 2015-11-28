@@ -14,16 +14,28 @@
 
 #include "re.h"
 
+namespace {
+#if HAVE_STD_REGEX
+using std::regex;
+using std::regex_error;
+namespace regex_constants = std::regex_constants;
+#else
+using boost::regex;
+using boost::regex_error;
+namespace regex_constants = boost::regex_constants;
+#endif
+}
+
 namespace benchmark {
 
 Regex::Regex() : init_(false) { }
 
 bool Regex::Init(const std::string& spec, std::string* error) {
   try {
-    re_ = std::regex(spec, std::regex_constants::extended);
+    re_ = regex(spec, regex_constants::extended);
 
     init_ = true;
-  } catch (const std::regex_error& e) {
+  } catch (const regex_error& e) {
     if (error) {
       *error = e.what();
     }
@@ -38,7 +50,7 @@ bool Regex::Match(const std::string& str) {
     return false;
   }
 
-  return std::regex_search(str, re_);
+  return regex_search(str, re_);
 }
 
 }  // end namespace benchmark

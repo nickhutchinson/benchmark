@@ -1,8 +1,9 @@
 #include "benchmark/benchmark.h"
 
+#include <stdint.h>
+
 #include <cassert>
 #include <cmath>
-#include <cstdint>
 #include <cstdlib>
 
 #include <iostream>

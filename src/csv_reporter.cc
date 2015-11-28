@@ -15,13 +15,14 @@
 #include "benchmark/reporter.h"
 #include "complexity.h"
 
+#include <stdint.h>
+
 #include <algorithm>
-#include <cstdint>
 #include <iostream>
 #include <string>
-#include <tuple>
 #include <vector>
 
+#include "arraysize.h"
 #include "string_util.h"
 #include "walltime.h"
 
@@ -29,8 +30,7 @@
 
 namespace benchmark {
 
-namespace {
-std::vector<std::string> elements = {
+static const char* elements[] = {
   "name",
   "iterations",
   "real_time",
@@ -42,15 +42,14 @@ std::vector<std::string> elements = {
   "error_occurred",
   "error_message"
 };
-}
 
 bool CSVReporter::ReportContext(const Context& context) {
   PrintBasicContext(&GetErrorStream(), context);
 
   std::ostream& Out = GetOutputStream();
-  for (auto B = elements.begin(); B != elements.end(); ) {
-    Out << *B++;
-    if (B != elements.end())
+  for (size_t i=0; i < arraysize(elements); ++i) {
+    Out << elements[i];
+    if (i+1 != arraysize(elements))
       Out << ",";
   }
   Out << "\n";
@@ -58,7 +57,7 @@ bool CSVReporter::ReportContext(const Context& context) {
 }
 
 void CSVReporter::ReportRuns(const std::vector<Run> & reports) {
-  for (const auto& run : reports)
+  foreach (const Run& run, reports)
     PrintRunData(run);
 }
 
@@ -71,7 +70,7 @@ void CSVReporter::PrintRunData(const Run & run) {
   ReplaceAll(&name, "\"", "\"\"");
   Out << '"' << name << "\",";
   if (run.error_occurred) {
-    Out << std::string(elements.size() - 3, ',');
+    Out << std::string(arraysize(elements) - 3, ',');
     Out << "true,";
     std::string msg = run.error_message;
     ReplaceAll(&msg, "\"", "\"\"");

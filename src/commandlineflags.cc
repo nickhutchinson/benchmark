@@ -19,6 +19,8 @@
 #include <iostream>
 #include <limits>
 
+#include "internal_macros.h"
+
 namespace benchmark {
 // Parses 'str' for a 32-bit signed integer.  If successful, writes
 // the result to *value and returns true; otherwise leaves *value

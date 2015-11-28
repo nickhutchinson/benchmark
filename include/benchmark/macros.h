@@ -27,8 +27,13 @@
 #if defined(__GNUC__)
 # define BENCHMARK_UNUSED __attribute__((unused))
 # define BENCHMARK_ALWAYS_INLINE __attribute__((always_inline))
+#if __cplusplus >= 201103L
 # define BENCHMARK_NOEXCEPT noexcept
 # define BENCHMARK_NOEXCEPT_OP(x) noexcept(x)
+#else
+# define BENCHMARK_NOEXCEPT throw()
+# define BENCHMARK_NOEXCEPT_OP(x)
+#endif  // __cplusplus >= 201103L
 #elif defined(_MSC_VER) && !defined(__clang__)
 # define BENCHMARK_UNUSED
 # define BENCHMARK_ALWAYS_INLINE __forceinline

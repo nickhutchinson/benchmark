@@ -1,18 +1,28 @@
 #include "benchmark/benchmark_api.h"
 
+#if !defined(BENCHMARK_NO_CXX11) && \
+        (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)
 #include <chrono>
+#include <mutex>
 #include <thread>
-
+namespace chrono = std::chrono;
+namespace this_thread = std::this_thread;
+#else
+#include <boost/chrono.hpp>
+#include <boost/thread.hpp>
+namespace chrono = boost::chrono;
+namespace this_thread = boost::this_thread;
+#endif
 void BM_basic(benchmark::State& state) {
   while (state.KeepRunning()) {
   }
 }
 
 void BM_basic_slow(benchmark::State& state) {
-  std::chrono::milliseconds sleep_duration(state.range_x());
+  chrono::milliseconds sleep_duration(state.range_x());
   while (state.KeepRunning()) {
-    std::this_thread::sleep_for(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(sleep_duration)
+    this_thread::sleep_for(
+      chrono::duration_cast<chrono::nanoseconds>(sleep_duration)
       );
   }
 }

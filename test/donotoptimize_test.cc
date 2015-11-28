@@ -1,12 +1,12 @@
 #include "benchmark/benchmark.h"
 
-#include <cstdint>
+#include <stdint.h>
 
 namespace {
 #if defined(__GNUC__)
-  std::uint64_t double_up(const std::uint64_t x) __attribute__ ((const));
+  uint64_t double_up(const uint64_t x) __attribute__ ((const));
 #endif
-  std::uint64_t double_up(const std::uint64_t x) {
+  uint64_t double_up(const uint64_t x) {
     return x * 2;
   }
 }

@@ -2,7 +2,14 @@
 #include "benchmark/benchmark.h"
 
 #include <cassert>
+
+#if defined(BENCHMARK_NO_CXX11)
+#include <boost/shared_ptr.hpp>
+using boost::shared_ptr;
+#else
 #include <memory>
+using std::shared_ptr;
+#endif  // BENCHMARK_NO_CXX11
 
 class MyFixture : public ::benchmark::Fixture {
  public:
@@ -24,7 +31,7 @@ class MyFixture : public ::benchmark::Fixture {
     assert(data == nullptr);
   }
 
-  std::unique_ptr<int> data;
+  shared_ptr<int> data;
 };
 
 

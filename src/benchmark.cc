@@ -25,11 +25,22 @@
 #include <cstring>
 #include <cstdio>
 #include <algorithm>
-#include <atomic>
-#include <condition_variable>
 #include <iostream>
 #include <memory>
+
+#ifndef BENCHMARK_NO_CXX11
+#include <atomic>
 #include <thread>
+#include <vector>
+#else
+#include <boost/atomic.hpp>
+#include <boost/thread.hpp>
+#include <boost/container/vector.hpp>
+
+#include <boost/interprocess/smart_ptr/unique_ptr.hpp>
+#include <boost/move/move.hpp>
+#include <boost/checked_delete.hpp>
+#endif
 
 #include "check.h"
 #include "commandlineflags.h"
@@ -41,6 +52,39 @@
 #include "string_util.h"
 #include "sysinfo.h"
 #include "walltime.h"
+
+namespace {
+#ifndef BENCHMARK_NO_CXX11
+  using std::atomic;
+  using std::move;
+  using std::thread;
+
+  template <class T>
+  struct Vector {
+    typedef std::vector<T> type;
+  };
+
+  template <class T>
+  struct UniquePtr {
+    typedef std::unique_ptr<T> type;
+  };
+
+#else
+  using boost::atomic;
+  using boost::move;
+  using boost::thread;
+
+  template <class T>
+  struct Vector {
+    typedef boost::container::vector<T> type;
+  };
+
+  template <class T>
+  struct UniquePtr {
+    typedef boost::interprocess::unique_ptr<T, boost::checked_deleter<T> > type;
+  };
+#endif  // BENCHMARK_NO_CXX11
+}
 
 DEFINE_bool(benchmark_list_tests, false,
             "Print a list of benchmarks. This option overrides all other "
@@ -121,7 +165,7 @@ typedef char* error_message_type;
 typedef const char* error_message_type;
 #endif
 
-static std::atomic<error_message_type> error_message = ATOMIC_VAR_INIT(nullptr);
+static atomic<error_message_type> error_message;
 
 // TODO(ericwf): support MallocCounter.
 //static benchmark::MallocCounter *benchmark_mc;
@@ -281,11 +325,11 @@ class TimerManager {
     if (entered_ < running_threads_) {
       // Wait for all threads to enter
       int phase_number_cp = phase_number_;
-      auto cb = [this, phase_number_cp]() {
-        return this->phase_number_ > phase_number_cp ||
-               entered_ == running_threads_; // A thread has aborted in error
-      };
-      phase_condition_.wait(ml.native_handle(), cb);
+      while (!(this->phase_number_ > phase_number_cp ||
+               // A thread has aborted in error
+               entered_ == running_threads_)) {
+        phase_condition_.wait(ml.native_handle());
+      }
       if (phase_number_ > phase_number_cp)
         return false;
       // else (running_threads_ == entered_) and we are the last thread.
@@ -298,7 +342,7 @@ class TimerManager {
 };
 
 // TimerManager for current run.
-static std::unique_ptr<TimerManager> timer_manager = nullptr;
+static UniquePtr<TimerManager>::type timer_manager(nullptr);
 
 } // end namespace
 
@@ -332,7 +376,7 @@ class BenchmarkFamilies {
   static BenchmarkFamilies* GetInstance();
 
   // Registers a benchmark family and returns the index assigned to it.
-  size_t AddBenchmark(std::unique_ptr<Benchmark> family);
+  size_t AddBenchmark(UniquePtr<Benchmark>::type family);
 
   // Extract the list of benchmark instances that match the specified
   // regular expression.
@@ -341,7 +385,7 @@ class BenchmarkFamilies {
  private:
   BenchmarkFamilies() {}
 
-  std::vector<std::unique_ptr<Benchmark>> families_;
+  Vector< UniquePtr<Benchmark>::type >::type families_;
   Mutex mutex_;
 };
 
@@ -396,10 +440,10 @@ BenchmarkFamilies* BenchmarkFamilies::GetInstance() {
 }
 
 
-size_t BenchmarkFamilies::AddBenchmark(std::unique_ptr<Benchmark> family) {
+size_t BenchmarkFamilies::AddBenchmark(UniquePtr<Benchmark>::type family) {
   MutexLock l(mutex_);
   size_t index = families_.size();
-  families_.push_back(std::move(family));
+  families_.push_back(move(family));
   return index;
 }
 
@@ -419,21 +463,23 @@ bool BenchmarkFamilies::FindBenchmarks(
   one_thread.push_back(1);
 
   MutexLock l(mutex_);
-  for (std::unique_ptr<Benchmark>& bench_family : families_) {
+  foreach (UniquePtr<Benchmark>::type& bench_family, families_) {
     // Family was deleted or benchmark doesn't match
     if (!bench_family) continue;
     BenchmarkImp* family = bench_family->imp_;
 
     if (family->arg_count_ == -1) {
       family->arg_count_ = 0;
-      family->args_.emplace_back(-1, -1);
+      family->args_.push_back(std::make_pair(-1, -1));
     }
-    for (auto const& args : family->args_) {
+
+    typedef std::pair<int, int> ArgsT;
+    foreach (const ArgsT& args, family->args_) {
       const std::vector<int>* thread_counts =
         (family->thread_counts_.empty()
          ? &one_thread
          : &family->thread_counts_);
-      for (int num_threads : *thread_counts) {
+      foreach (int num_threads, *thread_counts) {
 
         Benchmark::Instance instance;
         instance.name = family->name_;
@@ -500,7 +546,7 @@ BenchmarkImp::~BenchmarkImp() {
 void BenchmarkImp::Arg(int x) {
   CHECK(arg_count_ == -1 || arg_count_ == 1);
   arg_count_ = 1;
-  args_.emplace_back(x, -1);
+  args_.push_back(std::make_pair(x, -1));
 }
 
 void BenchmarkImp::Unit(TimeUnit unit) {
@@ -513,8 +559,8 @@ void BenchmarkImp::Range(int start, int limit) {
   std::vector<int> arglist;
   AddRange(&arglist, start, limit, range_multiplier_);
 
-  for (int i : arglist) {
-    args_.emplace_back(i, -1);
+  foreach (int i, arglist) {
+    args_.push_back(std::make_pair(i, -1));
   }
 }
 
@@ -524,14 +570,14 @@ void BenchmarkImp::DenseRange(int start, int limit) {
   CHECK_GE(start, 0);
   CHECK_LE(start, limit);
   for (int arg = start; arg <= limit; arg++) {
-    args_.emplace_back(arg, -1);
+    args_.push_back(std::make_pair(arg, -1));
   }
 }
 
 void BenchmarkImp::ArgPair(int x, int y) {
   CHECK(arg_count_ == -1 || arg_count_ == 2);
   arg_count_ = 2;
-  args_.emplace_back(x, y);
+  args_.push_back(std::make_pair(x, y));
 }
 
 void BenchmarkImp::RangePair(int lo1, int hi1, int lo2, int hi2) {
@@ -541,9 +587,9 @@ void BenchmarkImp::RangePair(int lo1, int hi1, int lo2, int hi2) {
   AddRange(&arglist1, lo1, hi1, range_multiplier_);
   AddRange(&arglist2, lo2, hi2, range_multiplier_);
 
-  for (int i : arglist1) {
-    for (int j : arglist2) {
-      args_.emplace_back(i, j);
+  foreach (int i, arglist1) {
+    foreach (int j, arglist2) {
+      args_.push_back(std::make_pair(i, j));
     }
   }
 }
@@ -765,7 +811,7 @@ void RunBenchmark(const benchmark::internal::Benchmark::Instance& b,
 
   std::vector<BenchmarkReporter::Run> reports;
 
-  std::vector<std::thread> pool;
+  Vector<thread>::type pool;
   if (b.multithreaded)
     pool.resize(b.threads);
 
@@ -784,7 +830,7 @@ void RunBenchmark(const benchmark::internal::Benchmark::Instance& b,
       error_message = nullptr;
 
       Notification done;
-      timer_manager = std::unique_ptr<TimerManager>(new TimerManager(b.threads, &done));
+      timer_manager.reset(new TimerManager(b.threads, &done));
 
       ThreadStats total;
       running_benchmark = true;
@@ -792,12 +838,12 @@ void RunBenchmark(const benchmark::internal::Benchmark::Instance& b,
         // If this is out first iteration of the while(true) loop then the
         // threads haven't been started and can't be joined. Otherwise we need
         // to join the thread before replacing them.
-        for (std::thread& thread : pool) {
+        foreach (thread& thread, pool) {
           if (thread.joinable())
             thread.join();
         }
         for (std::size_t ti = 0; ti < pool.size(); ++ti) {
-            pool[ti] = std::thread(&RunInThread, &b, iters, static_cast<int>(ti), &total);
+            pool[ti] = thread(&RunInThread, &b, iters, static_cast<int>(ti), &total);
         }
       } else {
         // Run directly in this thread
@@ -911,7 +957,7 @@ void RunBenchmark(const benchmark::internal::Benchmark::Instance& b,
   br->ReportRuns(reports);
 
   if (b.multithreaded) {
-    for (std::thread& thread : pool)
+    foreach (thread& thread, pool)
       thread.join();
   }
 }
@@ -980,7 +1026,7 @@ void RunMatchingBenchmarks(const std::vector<Benchmark::Instance>& benchmarks,
   // Determine the width of the name field using a minimum width of 10.
   bool has_repetitions = FLAGS_benchmark_repetitions > 1;
   size_t name_field_width = 10;
-  for (const Benchmark::Instance& benchmark : benchmarks) {
+  foreach (const Benchmark::Instance& benchmark, benchmarks) {
     name_field_width =
         std::max<size_t>(name_field_width, benchmark.name.size());
     has_repetitions |= benchmark.repetitions > 1;
@@ -1000,14 +1046,14 @@ void RunMatchingBenchmarks(const std::vector<Benchmark::Instance>& benchmarks,
   std::vector<BenchmarkReporter::Run> complexity_reports;
 
   if (reporter->ReportContext(context)) {
-    for (const auto& benchmark : benchmarks) {
+    foreach (const Benchmark::Instance& benchmark, benchmarks) {
       RunBenchmark(benchmark, reporter, complexity_reports);
     }
   }
 }
 
-std::unique_ptr<BenchmarkReporter> GetDefaultReporter() {
-  typedef std::unique_ptr<BenchmarkReporter> PtrType;
+UniquePtr<BenchmarkReporter>::type GetDefaultReporter() {
+  typedef UniquePtr<BenchmarkReporter>::type PtrType;
   if (FLAGS_benchmark_format == "console") {
     return PtrType(new ConsoleReporter);
   } else if (FLAGS_benchmark_format == "json") {
@@ -1033,14 +1079,15 @@ size_t RunSpecifiedBenchmarks(BenchmarkReporter* reporter) {
     spec = ".";  // Regexp that matches all benchmarks
 
   std::vector<internal::Benchmark::Instance> benchmarks;
-  auto families = internal::BenchmarkFamilies::GetInstance();
+  internal::BenchmarkFamilies* families =
+      internal::BenchmarkFamilies::GetInstance();
   if (!families->FindBenchmarks(spec, &benchmarks)) return 0;
 
   if (FLAGS_benchmark_list_tests) {
-    for (auto const& benchmark : benchmarks)
-      std::cout <<  benchmark.name << "\n";
+    foreach (const internal::Benchmark::Instance &benchmark, benchmarks)
+      std::cout << benchmark.name << "\n";
   } else {
-    std::unique_ptr<BenchmarkReporter> default_reporter;
+    UniquePtr<BenchmarkReporter>::type default_reporter;
     if (!reporter) {
       default_reporter = internal::GetDefaultReporter();
       reporter = default_reporter.get();
@@ -1100,9 +1147,9 @@ void ParseCommandLineFlags(int* argc, char** argv) {
 }
 
 Benchmark* RegisterBenchmarkInternal(Benchmark* bench) {
-    std::unique_ptr<Benchmark> bench_ptr(bench);
+    UniquePtr<Benchmark>::type bench_ptr(bench);
     BenchmarkFamilies* families = BenchmarkFamilies::GetInstance();
-    families->AddBenchmark(std::move(bench_ptr));
+    families->AddBenchmark(move(bench_ptr));
     return bench;
 }
 

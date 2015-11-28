@@ -2,9 +2,9 @@
 
 #include <cmath>
 #include <cstdarg>
-#include <array>
 #include <memory>
 #include <sstream>
+#include <vector>
 #include <stdio.h>
 
 #include "arraysize.h"
@@ -124,28 +124,26 @@ std::string StringPrintFImp(const char *msg, va_list args)
   va_list args_cp;
   va_copy(args_cp, args);
 
-  // TODO(ericwf): use std::array for first attempt to avoid one memory
-  // allocation guess what the size might be
-  std::array<char, 256> local_buff;
-  std::size_t size = local_buff.size();
+  char local_buff[256];
+  std::size_t size = sizeof(local_buff);
   // 2015-10-08: vsnprintf is used instead of snd::vsnprintf due to a limitation in the android-ndk
-  auto ret = vsnprintf(local_buff.data(), size, msg, args_cp);
+  int ret = vsnprintf(local_buff, size, msg, args_cp);
 
   va_end(args_cp);
 
   // handle empty expansion
   if (ret == 0)
-    return std::string{};
+    return std::string();
   if (static_cast<std::size_t>(ret) < size)
-    return std::string(local_buff.data());
+    return std::string(local_buff);
 
   // we did not provide a long enough buffer on our first attempt.
   // add 1 to size to account for null-byte in size cast to prevent overflow
   size = static_cast<std::size_t>(ret) + 1;
-  auto buff_ptr = std::unique_ptr<char[]>(new char[size]);
+  std::vector<char> buff(size);
   // 2015-10-08: vsnprintf is used instead of snd::vsnprintf due to a limitation in the android-ndk
-  ret = vsnprintf(buff_ptr.get(), size, msg, args);
-  return std::string(buff_ptr.get());
+  ret = vsnprintf(buff.data(), size, msg, args);
+  return std::string(buff.data());
 }
 
 std::string StringPrintF(const char* format, ...)
