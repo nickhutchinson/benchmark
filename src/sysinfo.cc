@@ -18,7 +18,6 @@
 #ifdef BENCHMARK_OS_WINDOWS
 #include <Shlwapi.h>
 #include <Windows.h>
-#include <VersionHelpers.h>
 #else
 #include <fcntl.h>
 #include <sys/resource.h>
@@ -241,11 +240,10 @@ void InitializeSystemInfo() {
 // TODO: also figure out cpuinfo_num_cpus
 
 #elif defined BENCHMARK_OS_WINDOWS
-  // In NT, read MHz from the registry. If we fail to do so or we're in win9x
-  // then make a crude estimate.
+  // In NT, read MHz from the registry. If we fail to do so then make a crude
+  // estimate.
   DWORD data, data_size = sizeof(data);
-  if (IsWindowsXPOrGreater() &&
-      SUCCEEDED(
+  if (SUCCEEDED(
           SHGetValueA(HKEY_LOCAL_MACHINE,
                       "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
                       "~MHz", nullptr, &data, &data_size)))

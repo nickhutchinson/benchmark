@@ -1,5 +1,7 @@
 #include "string_util.h"
 
+#include <stdint.h>
+
 #include <cmath>
 #include <cstdarg>
 #include <memory>

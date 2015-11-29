@@ -63,4 +63,8 @@
 # endif
 #endif  // HAVE_CXX11_STATIC_ASSERT
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+# define va_copy(dest, src) ((dest) = (src))
+#endif
+
 #endif // BENCHMARK_INTERNAL_MACROS_H_
