@@ -250,7 +250,10 @@ void InitializeSystemInfo() {
     cpuinfo_cycles_per_second = static_cast<double>((int64_t)data * (int64_t)(1000 * 1000));  // was mhz
   else
     cpuinfo_cycles_per_second = static_cast<double>(EstimateCyclesPerSecond());
-// TODO: also figure out cpuinfo_num_cpus
+
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo(&sysinfo);
+  cpuinfo_num_cpus = sysinfo.dwNumberOfProcessors;
 
 #elif defined BENCHMARK_OS_MACOSX
   // returning "mach time units" per second. the current number of elapsed
