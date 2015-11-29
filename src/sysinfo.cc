@@ -401,10 +401,9 @@ int NumCPUs(void) {
        : nullptr)
 
 bool CpuScalingEnabled() {
-#ifndef BENCHMARK_OS_WINDOWS
+#ifdef BENCHMARK_OS_LINUX
   // On Linux, the CPUfreq subsystem exposes CPU information as files on the
-  // local file system. If reading the exported files fails, then we may not be
-  // running on Linux, so we silently ignore all the read errors.
+  // local file system.
   for (int cpu = 0, num_cpus = NumCPUs(); cpu < num_cpus; ++cpu) {
     std::string governor_file = StrCat("/sys/devices/system/cpu/cpu", cpu,
                                        "/cpufreq/scaling_governor");
@@ -415,8 +414,12 @@ bool CpuScalingEnabled() {
     fclose(file);
     if (memprefix(buff, bytes_read, "performance") == nullptr) return true;
   }
-#endif
   return false;
+#else
+  // We don't know how to detect this on this platform -- assume the worst so
+  // we get meaningful walltimes.
+  return true;
+#endif
 }
 
 }  // end namespace benchmark
