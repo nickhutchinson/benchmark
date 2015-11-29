@@ -1,4 +1,5 @@
 language: cpp
+sudo: true
 
 # NOTE: The COMPILER variable is unused. It simply makes the display on
 # travis-ci.org more readable.
