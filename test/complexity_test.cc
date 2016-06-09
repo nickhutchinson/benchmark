@@ -112,7 +112,7 @@ std::string join(First f, Args&&... args) {
     return std::string(std::move(f)) + "[ ]+" + join(std::forward<Args>(args)...);
 }
 
-std::string dec_re = "[0-9]+\\.[0-9]+";
+std::string dec_re = "[0-9]+(\\.[0-9]+)?([Ee][+-]?[0-9]+)?";
 
 #define ADD_COMPLEXITY_CASES(...) \
     int CONCAT(dummy, __LINE__) = AddComplexityTest(__VA_ARGS__)
