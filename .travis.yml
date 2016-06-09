@@ -1,8 +1,7 @@
 language: cpp
-sudo: true
+sudo: required
+dist: trusty
 
-# NOTE: The COMPILER variable is unused. It simply makes the display on
-# travis-ci.org more readable.
 matrix:
     include:
         - compiler: gcc
@@ -50,5 +49,3 @@ after_success:
   - if [ "${BUILD_TYPE}" == "Coverage" -a "${TRAVIS_OS_NAME}" == "linux" ]; then
       coveralls --include src --include include --gcov-options '\-lp' --root .. --build-root .;
     fi
-
-sudo: required

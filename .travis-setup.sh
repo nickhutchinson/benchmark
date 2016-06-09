@@ -1,30 +1,33 @@
 #!/usr/bin/env bash
 
-# Before install
-
-sudo add-apt-repository -y ppa:kalakris/cmake
-if [ "$STD" = "c++03" ]; then
-    sudo apt-add-repository -y ppa:boost-latest/ppa
-elif [ "$STD" = "c++11" ]; then
-    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    if [ "$CXX" = "clang++" ]; then
-        wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository -y "deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main"
-    fi
-fi
-sudo apt-get update -qq
-
 # Install
 sudo apt-get install -qq cmake
-if [ "$STD" = "c++11" ] && [ "$CXX" = "g++" ]; then
+if [ "$COMPILER" = "g++-4.8" ]; then
     sudo apt-get install -qq gcc-4.8 g++-4.8
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
-elif [ "$CXX" = "clang++" ]; then
+    sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-4.8 90
+elif [ "$COMPILER" = "g++-4.6" ]; then
+    # Work around bug in 14.04's libstdc++ that breaks
+    # this_thread::sleep_for(). See:
+    # http://stackoverflow.com/questions/12523122/what-is-glibcxx-use-nanosleep-all-about
+    export CXXFLAGS=-D_GLIBCXX_USE_NANOSLEEP
+    sudo apt-get install -qq gcc-4.6 g++-4.6
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 90
+    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.6 90
+    sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-4.6 90
+elif [ "$COMPILER" = "clang++-3.6" ]; then
     sudo apt-get install -qq clang-3.6
-    sudo update-alternatives --install /usr/local/bin/clang   clang   /usr/bin/clang-3.6 90
-    sudo update-alternatives --install /usr/local/bin/clang++ clang++ /usr/bin/clang++-3.6 90
-    export PATH=/usr/local/bin:$PATH
+    sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-3.6 90
+    sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.6 90
+
+    # Workaround travis prepending a different clang version to PATH.
+    export CC=/usr/bin/clang
+    export CXX=/usr/bin/clang++
+fi
+
+if [ "$BUILD_TYPE" = "Coverage" ]; then
+    sudo apt-get install -qq lcov
 fi
 
 if [ "$STD" = "c++03" ]; then
