@@ -32,9 +32,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Windows AND BUILD_SHARED_LIBS)
 endif ()
 
 # Link threads.
-target_link_libraries(benchmark LINK_PRIVATE
-  ${CMAKE_THREAD_LIBS_INIT}
-)
+target_link_libraries(benchmark ${CMAKE_THREAD_LIBS_INIT})
 
 # We need extra libraries on Windows
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
