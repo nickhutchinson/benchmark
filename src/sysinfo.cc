@@ -239,6 +239,7 @@ void InitializeSystemInfo() {
   }
 // TODO: also figure out cpuinfo_num_cpus
 
+
 #elif defined BENCHMARK_OS_WINDOWS
   // In NT, read MHz from the registry. If we fail to do so then make a crude
   // estimate.
@@ -251,9 +252,9 @@ void InitializeSystemInfo() {
   else
     cpuinfo_cycles_per_second = static_cast<double>(EstimateCyclesPerSecond());
 
-  SYSTEM_INFO sysinfo;
+  SYSTEM_INFO sysinfo = { 0 };
   GetSystemInfo(&sysinfo);
-  cpuinfo_num_cpus = sysinfo.dwNumberOfProcessors;
+  cpuinfo_num_cpus = sysinfo.dwNumberOfProcessors; // number of logical processors in the current group
 
 #elif defined BENCHMARK_OS_MACOSX
   // returning "mach time units" per second. the current number of elapsed
