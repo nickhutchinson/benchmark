@@ -19,49 +19,49 @@
 #endif
 
 #ifndef BENCHMARK_HAS_CXX11
-# define BENCHMARK_DISALLOW_COPY_AND_ASSIGN(TypeName)  \
-    TypeName(const TypeName&);                         \
-    TypeName& operator=(const TypeName&)
+#define BENCHMARK_DISALLOW_COPY_AND_ASSIGN(TypeName) \
+  TypeName(const TypeName&);                         \
+  TypeName& operator=(const TypeName&)
 #else
-# define BENCHMARK_DISALLOW_COPY_AND_ASSIGN(TypeName)  \
-    TypeName(const TypeName&) = delete;                \
-    TypeName& operator=(const TypeName&) = delete
+#define BENCHMARK_DISALLOW_COPY_AND_ASSIGN(TypeName) \
+  TypeName(const TypeName&) = delete;                \
+  TypeName& operator=(const TypeName&) = delete
 #endif
 
 #if defined(__GNUC__)
-# define BENCHMARK_UNUSED __attribute__((unused))
-# define BENCHMARK_ALWAYS_INLINE __attribute__((always_inline))
+#define BENCHMARK_UNUSED __attribute__((unused))
+#define BENCHMARK_ALWAYS_INLINE __attribute__((always_inline))
 #if __cplusplus >= 201103L
-# define BENCHMARK_NOEXCEPT noexcept
-# define BENCHMARK_NOEXCEPT_OP(x) noexcept(x)
+#define BENCHMARK_NOEXCEPT noexcept
+#define BENCHMARK_NOEXCEPT_OP(x) noexcept(x)
 #else
-# define BENCHMARK_NOEXCEPT throw()
-# define BENCHMARK_NOEXCEPT_OP(x)
+#define BENCHMARK_NOEXCEPT throw()
+#define BENCHMARK_NOEXCEPT_OP(x)
 #endif  // __cplusplus >= 201103L
 #elif defined(_MSC_VER) && !defined(__clang__)
-# define BENCHMARK_UNUSED
-# define BENCHMARK_ALWAYS_INLINE __forceinline
-# if _MSC_VER >= 1900
-#  define BENCHMARK_NOEXCEPT noexcept
-#  define BENCHMARK_NOEXCEPT_OP(x) noexcept(x)
-# else
-#  define BENCHMARK_NOEXCEPT
-#  define BENCHMARK_NOEXCEPT_OP(x)
-# endif
-# define __func__ __FUNCTION__
+#define BENCHMARK_UNUSED
+#define BENCHMARK_ALWAYS_INLINE __forceinline
+#if _MSC_VER >= 1900
+#define BENCHMARK_NOEXCEPT noexcept
+#define BENCHMARK_NOEXCEPT_OP(x) noexcept(x)
 #else
-# define BENCHMARK_UNUSED
-# define BENCHMARK_ALWAYS_INLINE
-# define BENCHMARK_NOEXCEPT
-# define BENCHMARK_NOEXCEPT_OP(x)
+#define BENCHMARK_NOEXCEPT
+#define BENCHMARK_NOEXCEPT_OP(x)
+#endif
+#define __func__ __FUNCTION__
+#else
+#define BENCHMARK_UNUSED
+#define BENCHMARK_ALWAYS_INLINE
+#define BENCHMARK_NOEXCEPT
+#define BENCHMARK_NOEXCEPT_OP(x)
 #endif
 
 #if defined(__GNUC__)
-# define BENCHMARK_BUILTIN_EXPECT(x, y) __builtin_expect(x, y)
-# define BENCHMARK_DEPRECATED_MSG(msg) __attribute__((deprecated(msg)))
+#define BENCHMARK_BUILTIN_EXPECT(x, y) __builtin_expect(x, y)
+#define BENCHMARK_DEPRECATED_MSG(msg) __attribute__((deprecated(msg)))
 #else
-# define BENCHMARK_BUILTIN_EXPECT(x, y) x
-# define BENCHMARK_DEPRECATED_MSG(msg)
+#define BENCHMARK_BUILTIN_EXPECT(x, y) x
+#define BENCHMARK_DEPRECATED_MSG(msg)
 #endif
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -69,15 +69,15 @@
 #endif
 
 #ifndef BENCHMARK_API
-# if !defined(_WIN32)
-#   define BENCHMARK_API __attribute__((visibility("default")))
-# elif defined(BENCHMARK_DLL) && defined(BENCHMARK_BUILDING_BENCHMARK)
-#   define BENCHMARK_API __declspec(dllexport)
-# elif defined(BENCHMARK_DLL)
-#   define BENCHMARK_API __declspec(dllimport)
-# else
-#   define BENCHMARK_API
-# endif
+#if !defined(_WIN32)
+#define BENCHMARK_API __attribute__((visibility("default")))
+#elif defined(BENCHMARK_DLL) && defined(BENCHMARK_BUILDING_BENCHMARK)
+#define BENCHMARK_API __declspec(dllexport)
+#elif defined(BENCHMARK_DLL)
+#define BENCHMARK_API __declspec(dllimport)
+#else
+#define BENCHMARK_API
+#endif
 #endif  // BENCHMARK_API
 
 #endif  // BENCHMARK_MACROS_H_

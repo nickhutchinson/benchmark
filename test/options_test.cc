@@ -1,7 +1,7 @@
 #include "benchmark/benchmark_api.h"
 
 #if !defined(BENCHMARK_NO_CXX11) && \
-        (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)
+    (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)
 #include <chrono>
 #include <mutex>
 #include <thread>
@@ -22,8 +22,7 @@ void BM_basic_slow(benchmark::State& state) {
   chrono::milliseconds sleep_duration(state.range(0));
   while (state.KeepRunning()) {
     this_thread::sleep_for(
-      chrono::duration_cast<chrono::nanoseconds>(sleep_duration)
-      );
+        chrono::duration_cast<chrono::nanoseconds>(sleep_duration));
   }
 }
 

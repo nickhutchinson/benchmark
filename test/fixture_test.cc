@@ -27,13 +27,10 @@ class MyFixture : public ::benchmark::Fixture {
     }
   }
 
-  ~MyFixture() {
-    assert(data == nullptr);
-  }
+  ~MyFixture() { assert(data == nullptr); }
 
   shared_ptr<int> data;
 };
-
 
 BENCHMARK_F(MyFixture, Foo)(benchmark::State& st) {
   assert(data.get() != nullptr);

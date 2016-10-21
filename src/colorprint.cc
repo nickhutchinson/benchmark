@@ -26,11 +26,11 @@
 #include "internal_macros.h"
 
 #ifdef BENCHMARK_OS_WINDOWS
-#include <io.h>
 #include <Windows.h>
+#include <io.h>
 #else
 #include <unistd.h>
-#endif // BENCHMARK_OS_WINDOWS
+#endif  // BENCHMARK_OS_WINDOWS
 
 namespace benchmark {
 namespace {
@@ -83,7 +83,7 @@ PlatformColorCode GetPlatformColorCode(LogColor color) {
 
 }  // end namespace
 
-std::string FormatString(const char *msg, va_list args) {
+std::string FormatString(const char* msg, va_list args) {
   // we might need a second shot at this, so pre-emptivly make a copy
   va_list args_cp;
   va_copy(args_cp, args);
@@ -97,13 +97,13 @@ std::string FormatString(const char *msg, va_list args) {
   // currently there is no error handling for failure, so this is hack.
   CHECK(ret >= 0);
 
-  if (ret == 0) // handle empty expansion
+  if (ret == 0)  // handle empty expansion
     return std::string();
   else if (static_cast<size_t>(ret) < size)
     return local_buff;
   else {
     // we did not provide a long enough buffer on our first attempt.
-    size = (size_t)ret + 1; // + 1 for the null byte
+    size = (size_t)ret + 1;  // + 1 for the null byte
     std::vector<char> buff(size);
     ret = std::vsnprintf(buff.data(), size, msg, args);
     CHECK(ret > 0 && ((size_t)ret) < size);
@@ -111,7 +111,7 @@ std::string FormatString(const char *msg, va_list args) {
   }
 }
 
-std::string FormatString(const char *msg, ...) {
+std::string FormatString(const char* msg, ...) {
   va_list args;
   va_start(args, msg);
   std::string tmp = FormatString(msg, args);
@@ -126,9 +126,10 @@ void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, ...) {
   va_end(args);
 }
 
-void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, va_list args) {
+void ColorPrintf(std::ostream& out, LogColor color, const char* fmt,
+                 va_list args) {
 #ifdef BENCHMARK_OS_WINDOWS
-  ((void)out); // suppress unused warning
+  ((void)out);  // suppress unused warning
 
   const HANDLE stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -153,7 +154,6 @@ void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, va_list arg
   if (color_code) out << FormatString("\033[0;3%sm", color_code);
   out << FormatString(fmt, args) << "\033[m";
 #endif
-
 }
 
 bool IsColorTerminal() {
@@ -183,7 +183,7 @@ bool IsColorTerminal() {
   }
 
   return 0 != isatty(fileno(stdout)) && term_supports_color;
-#endif // BENCHMARK_OS_WINDOWS
+#endif  // BENCHMARK_OS_WINDOWS
 }
 
 }  // end namespace benchmark

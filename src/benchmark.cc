@@ -13,12 +13,12 @@
 // limitations under the License.
 
 #include "benchmark/benchmark.h"
-#include "internal_macros.h"
 #include "benchmark_api_internal.h"
+#include "internal_macros.h"
 
 #ifndef BENCHMARK_OS_WINDOWS
-#include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <unistd.h>
 #endif
 
@@ -26,8 +26,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <thread>
 
 #ifndef BENCHMARK_NO_CXX11
@@ -100,7 +100,6 @@ DEFINE_string(benchmark_color, "auto",
 
 DEFINE_int32(v, 0, "The level of verbose logging to output");
 
-
 namespace benchmark {
 namespace detail {
 #ifndef BENCHMARK_NO_CXX11
@@ -128,7 +127,6 @@ static const size_t kMaxIterations = 1000000000;
 
 namespace internal {
 
-
 class ThreadManager {
  public:
   ThreadManager(int num_threads)
@@ -152,15 +150,18 @@ class ThreadManager {
 
   void WaitForAllThreads() EXCLUDES(end_cond_mutex_) {
     MutexLock lock(end_cond_mutex_);
-    while (!(alive_threads_ == 0))
-      end_condition_.wait(lock.native_handle());
+    while (!(alive_threads_ == 0)) end_condition_.wait(lock.native_handle());
   }
 
  public:
   struct Result {
     Result()
-        : real_time_used(0), cpu_time_used(0), manual_time_used(0),
-          bytes_processed(0), items_processed(0), complexity_n(0),
+        : real_time_used(0),
+          cpu_time_used(0),
+          manual_time_used(0),
+          bytes_processed(0),
+          items_processed(0),
+          complexity_n(0),
           has_error_(false) {}
 
     double real_time_used;
@@ -185,10 +186,14 @@ class ThreadManager {
 
 // Timer management class
 class ThreadTimer {
-public:
+ public:
   ThreadTimer()
-      : running_(false), start_real_time_(0), start_cpu_time_(0),
-        real_time_used_(0), cpu_time_used_(0), manual_time_used_(0) {}
+      : running_(false),
+        start_real_time_(0),
+        start_cpu_time_(0),
+        real_time_used_(0),
+        cpu_time_used_(0),
+        manual_time_used_(0) {}
 
   // Called by each thread
   void StartTimer() {
@@ -228,26 +233,24 @@ public:
     return manual_time_used_;
   }
 
-private:
-  bool running_;           // Is the timer running
-  double start_real_time_; // If running_
-  double start_cpu_time_;  // If running_
+ private:
+  bool running_;            // Is the timer running
+  double start_real_time_;  // If running_
+  double start_cpu_time_;   // If running_
 
   // Accumulated time so far (does not contain current slice if running_)
   double real_time_used_;
   double cpu_time_used_;
   // Manually set iteration time. User sets this with SetIterationTime(seconds).
   double manual_time_used_;
-
 };
 
 namespace {
 
-BenchmarkReporter::Run
-CreateRunReport(const benchmark::internal::Benchmark::Instance& b,
-                const internal::ThreadManager::Result& results,
-                size_t iters, double seconds)
-{
+BenchmarkReporter::Run CreateRunReport(
+    const benchmark::internal::Benchmark::Instance& b,
+    const internal::ThreadManager::Result& results, size_t iters,
+    double seconds) {
   // Create report about this benchmark run.
   BenchmarkReporter::Run report;
 
@@ -292,8 +295,8 @@ void RunInThread(const benchmark::internal::Benchmark::Instance* b,
   internal::ThreadTimer timer;
   State st(iters, b->arg, thread_id, b->threads, &timer, manager);
   b->benchmark->Run(st);
-  CHECK(st.iterations() == st.max_iterations) <<
-    "Benchmark returned before State::KeepRunning() returned false!";
+  CHECK(st.iterations() == st.max_iterations)
+      << "Benchmark returned before State::KeepRunning() returned false!";
   {
     MutexLock l(manager->GetBenchmarkMutex());
     internal::ThreadManager::Result& results = manager->results;
@@ -310,17 +313,18 @@ void RunInThread(const benchmark::internal::Benchmark::Instance* b,
 std::vector<BenchmarkReporter::Run> RunBenchmark(
     const benchmark::internal::Benchmark::Instance& b,
     std::vector<BenchmarkReporter::Run>* complexity_reports) {
-  std::vector<BenchmarkReporter::Run> reports; // return value
+  std::vector<BenchmarkReporter::Run> reports;  // return value
 
   size_t iters = 1;
   detail::shared_ptr<internal::ThreadManager> manager;
   std::vector<detail::thread> pool(b.threads - 1);
-  const int repeats = b.repetitions != 0 ? b.repetitions
-                                         : FLAGS_benchmark_repetitions;
-  const bool report_aggregates_only = repeats != 1 &&
+  const int repeats =
+      b.repetitions != 0 ? b.repetitions : FLAGS_benchmark_repetitions;
+  const bool report_aggregates_only =
+      repeats != 1 &&
       (b.report_mode == internal::RM_Unspecified
-        ? FLAGS_benchmark_report_aggregates_only
-        : b.report_mode == internal::RM_ReportAggregatesOnly);
+           ? FLAGS_benchmark_report_aggregates_only
+           : b.report_mode == internal::RM_ReportAggregatesOnly);
   for (int i = 0; i < repeats; i++) {
     for (;;) {
       // Try benchmark
@@ -346,23 +350,24 @@ std::vector<BenchmarkReporter::Run> RunBenchmark(
       results.manual_time_used /= b.threads;
 
       VLOG(2) << "Ran in " << results.cpu_time_used << "/"
-                           << results.real_time_used << "\n";
+              << results.real_time_used << "\n";
 
       // Base decisions off of real time if requested by this benchmark.
       double seconds = results.cpu_time_used;
       if (b.use_manual_time) {
-          seconds = results.manual_time_used;
+        seconds = results.manual_time_used;
       } else if (b.use_real_time) {
-          seconds = results.real_time_used;
+        seconds = results.real_time_used;
       }
 
-      const double min_time = !IsZero(b.min_time) ? b.min_time
-                                                  : FLAGS_benchmark_min_time;
+      const double min_time =
+          !IsZero(b.min_time) ? b.min_time : FLAGS_benchmark_min_time;
       // If this was the first run, was elapsed time or cpu time large enough?
       // If this is not the first run, go with the current value of iter.
       if ((i > 0) || results.has_error_ || (iters >= kMaxIterations) ||
           (seconds >= min_time) || (results.real_time_used >= 5 * min_time)) {
-        BenchmarkReporter::Run report = CreateRunReport(b, results, iters, seconds);
+        BenchmarkReporter::Run report =
+            CreateRunReport(b, results, iters, seconds);
         if (!report.error_occurred && b.complexity != oNone)
           complexity_reports->push_back(report);
         reports.push_back(report);
@@ -390,11 +395,11 @@ std::vector<BenchmarkReporter::Run> RunBenchmark(
   }
   // Calculate additional statistics
   std::vector<BenchmarkReporter::Run> stat_reports = ComputeStats(reports);
-  if((b.complexity != oNone) && b.last_benchmark_instance) {
+  if ((b.complexity != oNone) && b.last_benchmark_instance) {
     std::vector<BenchmarkReporter::Run> additional_run_stats =
         ComputeBigO(*complexity_reports);
     stat_reports.insert(stat_reports.end(), additional_run_stats.begin(),
-                   additional_run_stats.end());
+                        additional_run_stats.end());
     complexity_reports->clear();
   }
 
@@ -403,8 +408,8 @@ std::vector<BenchmarkReporter::Run> RunBenchmark(
   return reports;
 }
 
-} // namespace
-} // namespace internal
+}  // namespace
+}  // namespace internal
 
 State::State(size_t max_iters, const std::vector<int>& ranges, int thread_i,
              int n_threads, internal::ThreadTimer* timer,
@@ -451,8 +456,7 @@ void State::SkipWithError(const char* msg) {
   if (timer_->running()) timer_->StopTimer();
 }
 
-void State::SetIterationTime(double seconds)
-{
+void State::SetIterationTime(double seconds) {
   timer_->SetIterationTime(seconds);
 }
 
@@ -484,7 +488,7 @@ namespace {
 
 // We flush streams after invoking reporter methods that write to them. This
 // ensures users get timely updates even when streams are not line-buffered.
-static void FlushStreams(BenchmarkReporter *reporter) {
+static void FlushStreams(BenchmarkReporter* reporter) {
   if (!reporter) return;
   std::flush(reporter->GetOutputStream());
   std::flush(reporter->GetErrorStream());
@@ -504,8 +508,7 @@ void RunMatchingBenchmarks(const std::vector<Benchmark::Instance>& benchmarks,
         std::max<size_t>(name_field_width, benchmark.name.size());
     has_repetitions |= benchmark.repetitions > 1;
   }
-  if (has_repetitions)
-    name_field_width += std::strlen("_stddev");
+  if (has_repetitions) name_field_width += std::strlen("_stddev");
 
   // Print header here
   BenchmarkReporter::Context context;
@@ -518,11 +521,11 @@ void RunMatchingBenchmarks(const std::vector<Benchmark::Instance>& benchmarks,
   // Keep track of runing times of all instances of current benchmark
   std::vector<BenchmarkReporter::Run> complexity_reports;
 
-  if (console_reporter->ReportContext(context)
-      && (!file_reporter || file_reporter->ReportContext(context))) {
+  if (console_reporter->ReportContext(context) &&
+      (!file_reporter || file_reporter->ReportContext(context))) {
     FlushStreams(console_reporter);
     FlushStreams(file_reporter);
-    foreach (const internal::Benchmark::Instance &benchmark, benchmarks) {
+    foreach (const internal::Benchmark::Instance& benchmark, benchmarks) {
       std::vector<BenchmarkReporter::Run> reports =
           RunBenchmark(benchmark, &complexity_reports);
       console_reporter->ReportRuns(reports);
@@ -537,8 +540,8 @@ void RunMatchingBenchmarks(const std::vector<Benchmark::Instance>& benchmarks,
   FlushStreams(file_reporter);
 }
 
-detail::shared_ptr<BenchmarkReporter>
-CreateReporter(std::string const& name, ConsoleReporter::OutputOptions allow_color) {
+detail::shared_ptr<BenchmarkReporter> CreateReporter(
+    std::string const& name, ConsoleReporter::OutputOptions allow_color) {
   typedef detail::shared_ptr<BenchmarkReporter> PtrType;
   if (name == "console") {
     return PtrType(new ConsoleReporter(allow_color));
@@ -552,18 +555,16 @@ CreateReporter(std::string const& name, ConsoleReporter::OutputOptions allow_col
   }
 }
 
-} // end namespace
-} // end namespace internal
+}  // end namespace
+}  // end namespace internal
 
 size_t RunSpecifiedBenchmarks() {
   return RunSpecifiedBenchmarks(nullptr, nullptr);
 }
 
-
 size_t RunSpecifiedBenchmarks(BenchmarkReporter* console_reporter) {
   return RunSpecifiedBenchmarks(console_reporter, nullptr);
 }
-
 
 size_t RunSpecifiedBenchmarks(BenchmarkReporter* console_reporter,
                               BenchmarkReporter* file_reporter) {
@@ -584,8 +585,8 @@ size_t RunSpecifiedBenchmarks(BenchmarkReporter* console_reporter,
       output_opts = IsTruthyFlagValue(FLAGS_benchmark_color)
                         ? ConsoleReporter::OO_Color
                         : ConsoleReporter::OO_None;
-    default_console_reporter = internal::CreateReporter(
-          FLAGS_benchmark_format, output_opts);
+    default_console_reporter =
+        internal::CreateReporter(FLAGS_benchmark_format, output_opts);
     console_reporter = default_console_reporter.get();
   }
   std::ostream& Out = console_reporter->GetOutputStream();
@@ -594,7 +595,8 @@ size_t RunSpecifiedBenchmarks(BenchmarkReporter* console_reporter,
   std::string const& fname = FLAGS_benchmark_out;
   if (fname == "" && file_reporter) {
     Err << "A custom file reporter was provided but "
-                   "--benchmark_out=<file> was not specified." << std::endl;
+           "--benchmark_out=<file> was not specified."
+        << std::endl;
     std::exit(1);
   }
   if (fname != "") {
@@ -605,7 +607,7 @@ size_t RunSpecifiedBenchmarks(BenchmarkReporter* console_reporter,
     }
     if (!file_reporter) {
       default_file_reporter = internal::CreateReporter(
-            FLAGS_benchmark_out_format, ConsoleReporter::OO_None);
+          FLAGS_benchmark_out_format, ConsoleReporter::OO_None);
       file_reporter = default_file_reporter.get();
     }
     file_reporter->SetOutputStream(&output_file);
@@ -617,9 +619,10 @@ size_t RunSpecifiedBenchmarks(BenchmarkReporter* console_reporter,
 
   if (FLAGS_benchmark_list_tests) {
     foreach (internal::Benchmark::Instance const& benchmark, benchmarks)
-      Out <<  benchmark.name << "\n";
+      Out << benchmark.name << "\n";
   } else {
-    internal::RunMatchingBenchmarks(benchmarks, console_reporter, file_reporter);
+    internal::RunMatchingBenchmarks(benchmarks, console_reporter,
+                                    file_reporter);
   }
 
   return benchmarks.size();
@@ -646,29 +649,23 @@ void PrintUsageAndExit() {
 void ParseCommandLineFlags(int* argc, char** argv) {
   using namespace benchmark;
   for (int i = 1; i < *argc; ++i) {
-    if (
-        ParseBoolFlag(argv[i], "benchmark_list_tests",
+    if (ParseBoolFlag(argv[i], "benchmark_list_tests",
                       &FLAGS_benchmark_list_tests) ||
-        ParseStringFlag(argv[i], "benchmark_filter",
-                        &FLAGS_benchmark_filter) ||
+        ParseStringFlag(argv[i], "benchmark_filter", &FLAGS_benchmark_filter) ||
         ParseDoubleFlag(argv[i], "benchmark_min_time",
                         &FLAGS_benchmark_min_time) ||
         ParseInt32Flag(argv[i], "benchmark_repetitions",
                        &FLAGS_benchmark_repetitions) ||
         ParseBoolFlag(argv[i], "benchmark_report_aggregates_only",
-                       &FLAGS_benchmark_report_aggregates_only) ||
-        ParseStringFlag(argv[i], "benchmark_format",
-                        &FLAGS_benchmark_format) ||
-        ParseStringFlag(argv[i], "benchmark_out",
-                        &FLAGS_benchmark_out) ||
+                      &FLAGS_benchmark_report_aggregates_only) ||
+        ParseStringFlag(argv[i], "benchmark_format", &FLAGS_benchmark_format) ||
+        ParseStringFlag(argv[i], "benchmark_out", &FLAGS_benchmark_out) ||
         ParseStringFlag(argv[i], "benchmark_out_format",
                         &FLAGS_benchmark_out_format) ||
-        ParseStringFlag(argv[i], "benchmark_color",
-                        &FLAGS_benchmark_color) ||
+        ParseStringFlag(argv[i], "benchmark_color", &FLAGS_benchmark_color) ||
         // "color_print" is the deprecated name for "benchmark_color".
         // TODO: Remove this.
-        ParseStringFlag(argv[i], "color_print",
-                        &FLAGS_benchmark_color) ||
+        ParseStringFlag(argv[i], "color_print", &FLAGS_benchmark_color) ||
         ParseInt32Flag(argv[i], "v", &FLAGS_v)) {
       for (int j = i; j != *argc; ++j) argv[j] = argv[j + 1];
 
@@ -678,27 +675,27 @@ void ParseCommandLineFlags(int* argc, char** argv) {
       PrintUsageAndExit();
     }
   }
-  std::string const *format_flags[] = {&FLAGS_benchmark_format,
+  std::string const* format_flags[] = {&FLAGS_benchmark_format,
                                        &FLAGS_benchmark_out_format};
   foreach (std::string const* flag, format_flags)
-  if (*flag != "console" && *flag != "json" && *flag != "csv") {
-    PrintUsageAndExit();
-  }
+    if (*flag != "console" && *flag != "json" && *flag != "csv") {
+      PrintUsageAndExit();
+    }
   if (FLAGS_benchmark_color.empty()) {
     PrintUsageAndExit();
   }
 }
 
 int InitializeStreams() {
-    static std::ios_base::Init init;
-    return 0;
+  static std::ios_base::Init init;
+  return 0;
 }
 
-} // end namespace internal
+}  // end namespace internal
 
 void Initialize(int* argc, char** argv) {
   internal::ParseCommandLineFlags(argc, argv);
   internal::LogLevel() = FLAGS_v;
 }
 
-} // end namespace benchmark
+}  // end namespace benchmark

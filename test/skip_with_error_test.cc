@@ -1,9 +1,9 @@
 
 #undef NDEBUG
-#include "benchmark/benchmark.h"
-#include "../src/check.h" // NOTE: check.h is for internal use only!
 #include <cassert>
 #include <vector>
+#include "../src/check.h"  // NOTE: check.h is for internal use only!
+#include "benchmark/benchmark.h"
 
 namespace {
 
@@ -18,7 +18,7 @@ class TestReporter : public benchmark::ConsoleReporter {
     ConsoleReporter::ReportRuns(report);
   }
 
-  TestReporter()  {}
+  TestReporter() {}
   virtual ~TestReporter() {}
 
   mutable std::vector<Run> all_runs_;
@@ -32,11 +32,12 @@ struct TestCase {
   typedef benchmark::BenchmarkReporter::Run Run;
 
   void CheckRun(Run const& run) const {
-    CHECK(name == run.benchmark_name) << "expected " << name << " got " << run.benchmark_name;
+    CHECK(name == run.benchmark_name) << "expected " << name << " got "
+                                      << run.benchmark_name;
     CHECK(error_occurred == run.error_occurred);
     CHECK(error_message == run.error_message);
     if (error_occurred) {
-      //CHECK(run.iterations == 0);
+      // CHECK(run.iterations == 0);
     } else {
       CHECK(run.iterations != 0);
     }
@@ -56,12 +57,11 @@ int AddCases(const char* base_name, TestCase const (&v)[N]) {
 
 #define CONCAT(x, y) CONCAT2(x, y)
 #define CONCAT2(x, y) x##y
-#define ADD_CASES(id, ...) \
-    const TestCase CONCAT(cases, __LINE__)[] = __VA_ARGS__; \
-    int CONCAT(dummy, __LINE__) = AddCases(id, CONCAT(cases, __LINE__))
+#define ADD_CASES(id, ...)                                \
+  const TestCase CONCAT(cases, __LINE__)[] = __VA_ARGS__; \
+  int CONCAT(dummy, __LINE__) = AddCases(id, CONCAT(cases, __LINE__))
 
 }  // end namespace
-
 
 void BM_error_before_running(benchmark::State& state) {
   state.SkipWithError("error message");
@@ -70,8 +70,7 @@ void BM_error_before_running(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_error_before_running);
-ADD_CASES("BM_error_before_running",
-          {{"", true, "error message"}});
+ADD_CASES("BM_error_before_running", {{"", true, "error message"}});
 
 void BM_error_during_running(benchmark::State& state) {
   int first_iter = true;
@@ -87,17 +86,14 @@ void BM_error_during_running(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_error_during_running)->Arg(1)->Arg(2)->ThreadRange(1, 8);
-ADD_CASES(
-    "BM_error_during_running",
-    {{"/1/threads:1", true, "error message"},
-    {"/1/threads:2", true, "error message"},
-    {"/1/threads:4", true, "error message"},
-    {"/1/threads:8", true, "error message"},
-    {"/2/threads:1", false, ""},
-    {"/2/threads:2", false, ""},
-    {"/2/threads:4", false, ""},
-    {"/2/threads:8", false, ""}}
-);
+ADD_CASES("BM_error_during_running", {{"/1/threads:1", true, "error message"},
+                                      {"/1/threads:2", true, "error message"},
+                                      {"/1/threads:4", true, "error message"},
+                                      {"/1/threads:8", true, "error message"},
+                                      {"/2/threads:1", false, ""},
+                                      {"/2/threads:2", false, ""},
+                                      {"/2/threads:4", false, ""},
+                                      {"/2/threads:8", false, ""}});
 
 void BM_error_after_running(benchmark::State& state) {
   while (state.KeepRunning()) {
@@ -107,13 +103,10 @@ void BM_error_after_running(benchmark::State& state) {
     state.SkipWithError("error message");
 }
 BENCHMARK(BM_error_after_running)->ThreadRange(1, 8);
-ADD_CASES(
-    "BM_error_after_running",
-    {{"/threads:1", true, "error message"},
-    {"/threads:2", true, "error message"},
-    {"/threads:4", true, "error message"},
-    {"/threads:8", true, "error message"}}
-);
+ADD_CASES("BM_error_after_running", {{"/threads:1", true, "error message"},
+                                     {"/threads:2", true, "error message"},
+                                     {"/threads:4", true, "error message"},
+                                     {"/threads:8", true, "error message"}});
 
 void BM_error_while_paused(benchmark::State& state) {
   bool first_iter = true;
@@ -130,18 +123,14 @@ void BM_error_while_paused(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_error_while_paused)->Arg(1)->Arg(2)->ThreadRange(1, 8);
-ADD_CASES(
-    "BM_error_while_paused",
-    {{"/1/threads:1", true, "error message"},
-    {"/1/threads:2", true, "error message"},
-    {"/1/threads:4", true, "error message"},
-    {"/1/threads:8", true, "error message"},
-    {"/2/threads:1", false, ""},
-    {"/2/threads:2", false, ""},
-    {"/2/threads:4", false, ""},
-    {"/2/threads:8", false, ""}}
-);
-
+ADD_CASES("BM_error_while_paused", {{"/1/threads:1", true, "error message"},
+                                    {"/1/threads:2", true, "error message"},
+                                    {"/1/threads:4", true, "error message"},
+                                    {"/1/threads:8", true, "error message"},
+                                    {"/2/threads:1", false, ""},
+                                    {"/2/threads:2", false, ""},
+                                    {"/2/threads:4", false, ""},
+                                    {"/2/threads:8", false, ""}});
 
 int main(int argc, char* argv[]) {
   benchmark::Initialize(&argc, argv);

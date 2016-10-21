@@ -2,31 +2,31 @@
 #define TEST_OUTPUT_TEST_H
 
 #undef NDEBUG
-#include "benchmark/benchmark.h"
-#include "../src/re.h"
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
 #include <utility>
+#include <vector>
+#include "../src/re.h"
+#include "benchmark/benchmark.h"
 
 #define CONCAT2(x, y) x##y
 #define CONCAT(x, y) CONCAT2(x, y)
 
-#define ADD_CASES(id, ...)                                                     \
-  const TestCase CONCAT(cases, __LINE__)[] = __VA_ARGS__;                      \
-  int CONCAT(dummy, __LINE__) BENCHMARK_UNUSED =                               \
+#define ADD_CASES(id, ...)                                \
+  const TestCase CONCAT(cases, __LINE__)[] = __VA_ARGS__; \
+  int CONCAT(dummy, __LINE__) BENCHMARK_UNUSED =          \
       ::AddCases(id, CONCAT(cases, __LINE__))
 
-#define SET_SUBSTITUTIONS(...)                                                 \
-  const std::string CONCAT(subs, __LINE__)[][2] = __VA_ARGS__;                 \
-  int CONCAT(dummy, __LINE__) BENCHMARK_UNUSED =                               \
+#define SET_SUBSTITUTIONS(...)                                 \
+  const std::string CONCAT(subs, __LINE__)[][2] = __VA_ARGS__; \
+  int CONCAT(dummy, __LINE__) BENCHMARK_UNUSED =               \
       ::SetSubstitutions(CONCAT(subs, __LINE__))
 
 enum MatchRules {
-  MR_Default, // Skip non-matching lines until a match is found.
-  MR_Next,    // Match must occur on the next line.
-  MR_Not      // No line between the current position and the next match matches
-              // the regex
+  MR_Default,  // Skip non-matching lines until a match is found.
+  MR_Next,     // Match must occur on the next line.
+  MR_Not  // No line between the current position and the next match matches
+          // the regex
 };
 
 struct TestCase {
@@ -46,7 +46,7 @@ enum TestCaseID {
   TC_CSVOut,
   TC_CSVErr,
 
-  TC_NumID // PRIVATE
+  TC_NumID  // PRIVATE
 };
 
 // Add a list of test cases to be run against the output specified by
@@ -78,7 +78,6 @@ namespace {
 
 const char* const dec_re = "[0-9]*[.]?[0-9]+([eE][-+][0-9]+)?";
 
-} //  end namespace
+}  //  end namespace
 
-
-#endif // TEST_OUTPUT_TEST_H
+#endif  // TEST_OUTPUT_TEST_H

@@ -40,7 +40,7 @@ struct ChooseClockType {
   typedef std::chrono::high_resolution_clock type;
 #endif
 };
-#endif // BENCHMARK_NO_CXX11
+#endif  // BENCHMARK_NO_CXX11
 
 inline double ChronoClockNow() {
 #ifndef BENCHMARK_NO_CXX11
@@ -48,10 +48,10 @@ inline double ChronoClockNow() {
   typedef std::chrono::duration<double, std::chrono::seconds::period> FpSeconds;
 #else
   typedef boost::chrono::high_resolution_clock
-      ClockType; // selects either steady_clock or system_clock
+      ClockType;  // selects either steady_clock or system_clock
   typedef boost::chrono::duration<double, boost::chrono::seconds::period>
       FpSeconds;
-#endif // BENCHMARK_NO_CXX11
+#endif  // BENCHMARK_NO_CXX11
   return FpSeconds(ClockType::now().time_since_epoch()).count();
 }
 

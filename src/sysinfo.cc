@@ -21,8 +21,8 @@
 #else
 #include <fcntl.h>
 #include <sys/resource.h>
-#include <sys/types.h> // this header must be included before 'sys/sysctl.h' to avoid compilation error on FreeBSD
 #include <sys/time.h>
+#include <sys/types.h>  // this header must be included before 'sys/sysctl.h' to avoid compilation error on FreeBSD
 #include <unistd.h>
 #if defined BENCHMARK_OS_FREEBSD || defined BENCHMARK_OS_MACOSX
 #include <sys/sysctl.h>
@@ -126,7 +126,8 @@ void InitializeSystemInfo() {
   if (fd == -1) {
     perror(pname);
     if (!saw_mhz) {
-      cpuinfo_cycles_per_second = static_cast<double>(EstimateCyclesPerSecond());
+      cpuinfo_cycles_per_second =
+          static_cast<double>(EstimateCyclesPerSecond());
     }
     return;
   }
@@ -196,7 +197,8 @@ void InitializeSystemInfo() {
       cpuinfo_cycles_per_second = bogo_clock;
     } else {
       // If we don't even have bogomips, we'll use the slow estimation.
-      cpuinfo_cycles_per_second = static_cast<double>(EstimateCyclesPerSecond());
+      cpuinfo_cycles_per_second =
+          static_cast<double>(EstimateCyclesPerSecond());
     }
   }
   if (num_cpus == 0) {
@@ -238,7 +240,6 @@ void InitializeSystemInfo() {
   }
 // TODO: also figure out cpuinfo_num_cpus
 
-
 #elif defined BENCHMARK_OS_WINDOWS
   // In NT, read MHz from the registry. If we fail to do so then make a crude
   // estimate.
@@ -247,15 +248,19 @@ void InitializeSystemInfo() {
           SHGetValueA(HKEY_LOCAL_MACHINE,
                       "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
                       "~MHz", nullptr, &data, &data_size)))
-    cpuinfo_cycles_per_second = static_cast<double>((int64_t)data * (int64_t)(1000 * 1000));  // was mhz
+    cpuinfo_cycles_per_second =
+        static_cast<double>((int64_t)data * (int64_t)(1000 * 1000));  // was mhz
   else
     cpuinfo_cycles_per_second = static_cast<double>(EstimateCyclesPerSecond());
 
   SYSTEM_INFO sysinfo;
-  // Use memset as opposed to = {} to avoid GCC missing initializer false positives.
+  // Use memset as opposed to = {} to avoid GCC missing initializer false
+  // positives.
   std::memset(&sysinfo, 0, sizeof(SYSTEM_INFO));
   GetSystemInfo(&sysinfo);
-  cpuinfo_num_cpus = sysinfo.dwNumberOfProcessors; // number of logical processors in the current group
+  cpuinfo_num_cpus = sysinfo.dwNumberOfProcessors;  // number of logical
+                                                    // processors in the current
+                                                    // group
 
 #elif defined BENCHMARK_OS_MACOSX
   // returning "mach time units" per second. the current number of elapsed
@@ -276,8 +281,8 @@ void InitializeSystemInfo() {
   int num_cpus = 0;
   size_t size = sizeof(num_cpus);
   int numcpus_name[] = {CTL_HW, HW_NCPU};
-  if (::sysctl(numcpus_name, arraysize(numcpus_name), &num_cpus, &size, nullptr, 0) ==
-          0 &&
+  if (::sysctl(numcpus_name, arraysize(numcpus_name), &num_cpus, &size, nullptr,
+               0) == 0 &&
       (size == sizeof(num_cpus)))
     cpuinfo_num_cpus = num_cpus;
 
@@ -314,8 +319,8 @@ bool CpuScalingEnabled() {
   // On Linux, the CPUfreq subsystem exposes CPU information as files on the
   // local file system.
   for (int cpu = 0, num_cpus = NumCPUs(); cpu < num_cpus; ++cpu) {
-    std::string governor_file = StrCat("/sys/devices/system/cpu/cpu", cpu,
-                                       "/cpufreq/scaling_governor");
+    std::string governor_file =
+        StrCat("/sys/devices/system/cpu/cpu", cpu, "/cpufreq/scaling_governor");
     FILE* file = fopen(governor_file.c_str(), "r");
     if (!file) break;
     char buff[16];
