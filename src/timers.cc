@@ -71,7 +71,7 @@ double MakeTime(FILETIME const& kernel_time, FILETIME const& user_time) {
          1e-7;
 }
 #else
-double MakeTime(struct rusage ru) {
+double MakeTime(struct rusage const& ru) {
   return (static_cast<double>(ru.ru_utime.tv_sec) +
           static_cast<double>(ru.ru_utime.tv_usec) * 1e-6 +
           static_cast<double>(ru.ru_stime.tv_sec) +
@@ -101,7 +101,8 @@ BENCHMARK_NORETURN static void  DiagnoseAndExit(const char* msg) {
 
 
 double ProcessCPUUsage() {
-#if defined(CLOCK_PROCESS_CPUTIME_ID)
+// FIXME We want to use clock_gettime, but its not available in MacOS 10.11. See https://github.com/google/benchmark/pull/292
+#if defined(CLOCK_PROCESS_CPUTIME_ID) && !defined(BENCHMARK_OS_MACOSX)
   struct timespec spec;
   if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &spec) == 0)
     return MakeTime(spec);
@@ -124,7 +125,8 @@ double ProcessCPUUsage() {
 }
 
 double ThreadCPUUsage() {
-#if defined(CLOCK_THREAD_CPUTIME_ID)
+// FIXME We want to use clock_gettime, but its not available in MacOS 10.11. See https://github.com/google/benchmark/pull/292
+#if defined(CLOCK_THREAD_CPUTIME_ID) && !defined(BENCHMARK_OS_MACOSX)
   struct timespec ts;
   if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) == 0)
     return MakeTime(ts);

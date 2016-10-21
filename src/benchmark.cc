@@ -185,12 +185,10 @@ class ThreadManager {
 
 // Timer management class
 class ThreadTimer {
- public:
+public:
   ThreadTimer()
-      : running_(false),
-        real_time_used_(0),
-        cpu_time_used_(0),
-        manual_time_used_(0) {}
+      : running_(false), start_real_time_(0), start_cpu_time_(0),
+        real_time_used_(0), cpu_time_used_(0), manual_time_used_(0) {}
 
   // Called by each thread
   void StartTimer() {
@@ -230,10 +228,10 @@ class ThreadTimer {
     return manual_time_used_;
   }
 
- private:
-  bool running_;                // Is the timer running
-  double start_real_time_;      // If running_
-  double start_cpu_time_;       // If running_
+private:
+  bool running_;           // Is the timer running
+  double start_real_time_; // If running_
+  double start_cpu_time_;  // If running_
 
   // Accumulated time so far (does not contain current slice if running_)
   double real_time_used_;
