@@ -45,18 +45,20 @@ struct TestCase {
 
 std::vector<TestCase> ExpectedResults;
 
-int AddCases(const char* base_name, std::initializer_list<TestCase> const& v) {
-  for (auto TC : v) {
+template <size_t N>
+int AddCases(const char* base_name, TestCase const (&v)[N]) {
+  foreach (TestCase TC, v) {
     TC.name = base_name + TC.name;
-    ExpectedResults.push_back(std::move(TC));
+    ExpectedResults.push_back(TC);
   }
   return 0;
 }
 
 #define CONCAT(x, y) CONCAT2(x, y)
 #define CONCAT2(x, y) x##y
-#define ADD_CASES(...) \
-int CONCAT(dummy, __LINE__) = AddCases(__VA_ARGS__)
+#define ADD_CASES(id, ...) \
+    const TestCase CONCAT(cases, __LINE__)[] = __VA_ARGS__; \
+    int CONCAT(dummy, __LINE__) = AddCases(id, CONCAT(cases, __LINE__))
 
 }  // end namespace
 
@@ -74,7 +76,7 @@ ADD_CASES("BM_error_before_running",
 void BM_error_during_running(benchmark::State& state) {
   int first_iter = true;
   while (state.KeepRunning()) {
-    if (state.range_x() == 1 && state.thread_index <= (state.threads / 2)) {
+    if (state.range(0) == 1 && state.thread_index <= (state.threads / 2)) {
       assert(first_iter);
       first_iter = false;
       state.SkipWithError("error message");
@@ -116,7 +118,7 @@ ADD_CASES(
 void BM_error_while_paused(benchmark::State& state) {
   bool first_iter = true;
   while (state.KeepRunning()) {
-    if (state.range_x() == 1 && state.thread_index <= (state.threads / 2)) {
+    if (state.range(0) == 1 && state.thread_index <= (state.threads / 2)) {
       assert(first_iter);
       first_iter = false;
       state.PauseTiming();
@@ -148,9 +150,9 @@ int main(int argc, char* argv[]) {
   benchmark::RunSpecifiedBenchmarks(&test_reporter);
 
   typedef benchmark::BenchmarkReporter::Run Run;
-  auto EB = ExpectedResults.begin();
+  std::vector<TestCase>::const_iterator EB = ExpectedResults.begin();
 
-  for (Run const& run : test_reporter.all_runs_) {
+  foreach (Run const& run, test_reporter.all_runs_) {
     assert(EB != ExpectedResults.end());
     EB->CheckRun(run);
     ++EB;

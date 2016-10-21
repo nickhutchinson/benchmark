@@ -16,18 +16,21 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "commandlineflags.h"
 #include "check.h"
 #include "internal_macros.h"
 
 #ifdef BENCHMARK_OS_WINDOWS
+#include <io.h>
 #include <Windows.h>
-#endif
-
-DECLARE_bool(color_print);
+#else
+#include <unistd.h>
+#endif // BENCHMARK_OS_WINDOWS
 
 namespace benchmark {
 namespace {
@@ -119,14 +122,14 @@ std::string FormatString(const char *msg, ...) {
 void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
+  ColorPrintf(out, color, fmt, args);
+  va_end(args);
+}
 
-  if (!FLAGS_color_print) {
-    out << FormatString(fmt, args);
-    va_end(args);
-    return;
-  }
-
+void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, va_list args) {
 #ifdef BENCHMARK_OS_WINDOWS
+  ((void)out); // suppress unused warning
+
   const HANDLE stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
   // Gets the current text color.
@@ -151,7 +154,36 @@ void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, ...) {
   out << FormatString(fmt, args) << "\033[m";
 #endif
 
-  va_end(args);
+}
+
+bool IsColorTerminal() {
+#if BENCHMARK_OS_WINDOWS
+  // On Windows the TERM variable is usually not set, but the
+  // console there does support colors.
+  return 0 != _isatty(_fileno(stdout));
+#else
+  // On non-Windows platforms, we rely on the TERM variable. This list of
+  // supported TERM values is copied from Google Test:
+  // <https://github.com/google/googletest/blob/master/googletest/src/gtest.cc#L2925>.
+  const char* const SUPPORTED_TERM_VALUES[] = {
+      "xterm",         "xterm-color",     "xterm-256color",
+      "screen",        "screen-256color", "tmux",
+      "tmux-256color", "rxvt-unicode",    "rxvt-unicode-256color",
+      "linux",         "cygwin",
+  };
+
+  const char* const term = getenv("TERM");
+
+  bool term_supports_color = false;
+  foreach (const char* candidate, SUPPORTED_TERM_VALUES) {
+    if (term && 0 == strcmp(term, candidate)) {
+      term_supports_color = true;
+      break;
+    }
+  }
+
+  return 0 != isatty(fileno(stdout)) && term_supports_color;
+#endif // BENCHMARK_OS_WINDOWS
 }
 
 }  // end namespace benchmark

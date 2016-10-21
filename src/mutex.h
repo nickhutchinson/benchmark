@@ -8,6 +8,8 @@
 #include <boost/thread.hpp>
 #endif
 
+#include "check.h"
+
 // Enable thread safety attributes only with clang.
 // The attributes can be safely erased when compiling with other compilers.
 #if defined(HAVE_THREAD_SAFETY_ATTRIBUTES)
@@ -124,35 +126,59 @@ private:
   MutexLockImp ml_;
 };
 
+class Barrier {
+ public:
+   Barrier(int num_threads)
+       : running_threads_(num_threads), phase_number_(0), entered_(0) {}
 
-class Notification
-{
-public:
-  Notification() : notified_yet_(false) { }
-
-  void WaitForNotification() const EXCLUDES(mutex_) {
-    MutexLock m_lock(mutex_);
-    while (!this->HasBeenNotified()) {
-      cv_.wait(m_lock.native_handle());
-    }
-  }
-
-  void Notify() EXCLUDES(mutex_) {
+  // Called by each thread
+  bool wait() EXCLUDES(lock_) {
+    bool last_thread = false;
     {
-      MutexLock lock(mutex_);
-      notified_yet_ = 1;
+      MutexLock ml(lock_);
+      last_thread = createBarrier(ml);
     }
-    cv_.notify_all();
+    if (last_thread) phase_condition_.notify_all();
+    return last_thread;
   }
 
-private:
-  bool HasBeenNotified() const REQUIRES(mutex_) {
-    return notified_yet_;
+  void removeThread() EXCLUDES(lock_) {
+    MutexLock ml(lock_);
+    --running_threads_;
+    if (entered_ != 0) phase_condition_.notify_all();
   }
 
-  mutable Mutex mutex_;
-  mutable detail::condition_variable cv_;
-  bool notified_yet_ GUARDED_BY(mutex_);
+ private:
+  Mutex lock_;
+  Condition phase_condition_;
+  int running_threads_;
+
+  // State for barrier management
+  int phase_number_;
+  int entered_;  // Number of threads that have entered this barrier
+
+  // Enter the barrier and wait until all other threads have also
+  // entered the barrier.  Returns iff this is the last thread to
+  // enter the barrier.
+  bool createBarrier(MutexLock& ml) REQUIRES(lock_) {
+    CHECK_LT(entered_, running_threads_);
+    entered_++;
+    if (entered_ < running_threads_) {
+      // Wait for all threads to enter
+      int phase_number_cp = phase_number_;
+      while (!(phase_number_ > phase_number_cp ||
+               entered_ == running_threads_ // A thread has aborted in error
+               )) {
+        phase_condition_.wait(ml.native_handle());
+      }
+      if (phase_number_ > phase_number_cp) return false;
+      // else (running_threads_ == entered_) and we are the last thread.
+    }
+    // Last thread has reached the barrier
+    phase_number_++;
+    entered_ = 0;
+    return true;
+  }
 };
 
 } // end namespace benchmark

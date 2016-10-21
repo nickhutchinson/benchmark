@@ -33,8 +33,8 @@ namespace benchmark {
 BigOFunc* FittingCurve(BigO complexity) {
   struct Curves {
     static double oN(int n) { return n; };
-    static double oNSquared(int n) { return n * n; };
-    static double oNCubed(int n) { return n * n * n; };
+    static double oNSquared(int n) { return pow(n, 2); }
+    static double oNCubed(int n) { return pow(n, 3); }
     static double oLogN(int n) { return log2(n); };
     static double oNLogN(int n) { return n * log2(n); };
     static double o1(int) { return 1.0; };

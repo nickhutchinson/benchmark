@@ -19,7 +19,7 @@ void BM_basic(benchmark::State& state) {
 }
 
 void BM_basic_slow(benchmark::State& state) {
-  chrono::milliseconds sleep_duration(state.range_x());
+  chrono::milliseconds sleep_duration(state.range(0));
   while (state.KeepRunning()) {
     this_thread::sleep_for(
       chrono::duration_cast<chrono::nanoseconds>(sleep_duration)
@@ -35,8 +35,13 @@ BENCHMARK(BM_basic_slow)->Arg(1000)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_basic)->Range(1, 8);
 BENCHMARK(BM_basic)->RangeMultiplier(2)->Range(1, 8);
 BENCHMARK(BM_basic)->DenseRange(10, 15);
+#ifndef BENCHMARK_NO_CXX11
+BENCHMARK(BM_basic)->Args({42, 42});
+BENCHMARK(BM_basic)->Ranges({{64, 512}, {64, 512}});
+#else
 BENCHMARK(BM_basic)->ArgPair(42, 42);
 BENCHMARK(BM_basic)->RangePair(64, 512, 64, 512);
+#endif  // BENCHMARK_NO_CXX11
 BENCHMARK(BM_basic)->MinTime(0.7);
 BENCHMARK(BM_basic)->UseRealTime();
 BENCHMARK(BM_basic)->ThreadRange(2, 4);

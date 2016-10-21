@@ -20,7 +20,12 @@ enum LogColor {
 std::string FormatString(const char* msg, va_list args);
 std::string FormatString(const char* msg, ...);
 
+void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, va_list args);
 void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, ...);
+
+// Returns true if stdout appears to be a terminal that supports colored
+// output, false otherwise.
+bool IsColorTerminal();
 
 }  // end namespace benchmark
 

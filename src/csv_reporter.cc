@@ -24,7 +24,7 @@
 
 #include "arraysize.h"
 #include "string_util.h"
-#include "walltime.h"
+#include "timers.h"
 
 // File format reference: http://edoceo.com/utilitas/csv-file-format.
 

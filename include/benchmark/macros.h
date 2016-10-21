@@ -14,7 +14,11 @@
 #ifndef BENCHMARK_MACROS_H_
 #define BENCHMARK_MACROS_H_
 
-#if __cplusplus < 201103L
+#if __cplusplus >= 201103L
+#define BENCHMARK_HAS_CXX11
+#endif
+
+#ifndef BENCHMARK_HAS_CXX11
 # define BENCHMARK_DISALLOW_COPY_AND_ASSIGN(TypeName)  \
     TypeName(const TypeName&);                         \
     TypeName& operator=(const TypeName&)
@@ -54,8 +58,14 @@
 
 #if defined(__GNUC__)
 # define BENCHMARK_BUILTIN_EXPECT(x, y) __builtin_expect(x, y)
+# define BENCHMARK_DEPRECATED_MSG(msg) __attribute__((deprecated(msg)))
 #else
 # define BENCHMARK_BUILTIN_EXPECT(x, y) x
+# define BENCHMARK_DEPRECATED_MSG(msg)
+#endif
+
+#if defined(__GNUC__) && !defined(__clang__)
+#define BENCHMARK_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 #endif
 
 #ifndef BENCHMARK_API
