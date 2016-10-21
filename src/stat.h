@@ -7,9 +7,9 @@
 #include "internal_macros.h"
 
 #ifndef BENCHMARK_NO_CXX11
-# include <type_traits>
+#include <type_traits>
 #else
-# include <boost/type_traits.hpp>
+#include <boost/type_traits.hpp>
 #endif
 
 namespace benchmark {
@@ -150,7 +150,7 @@ class Stat1 {
 
  private:
   static_assert((detail::is_integral<NumType>::value &&
-                !detail::is_same<NumType, bool>::value),
+                 !detail::is_same<NumType, bool>::value),
                 "NumType must be an integral type that is not bool.");
   // Let i be the index of the samples provided (using +=)
   // and weight[i],value[i] be the data of sample #i

@@ -28,6 +28,7 @@
 #endif
 #include <string>
 
+#include "check.h"
 #include "internal_macros.h"
 
 namespace benchmark {
@@ -36,7 +37,8 @@ namespace benchmark {
 // cleanup
 class BENCHMARK_API Regex {
  public:
-  Regex();
+  Regex() : init_(false) {}
+
   ~Regex();
 
   // Compile a regular expression matcher from spec.  Returns true on success.
@@ -47,9 +49,10 @@ class BENCHMARK_API Regex {
 
   // Returns whether str matches the compiled regular expression.
   bool Match(const std::string& str);
+
  private:
   bool init_;
-  // Underlying regular expression object
+// Underlying regular expression object
 #if defined(HAVE_STD_REGEX)
   std::regex re_;
 #elif defined(HAVE_BOOST_REGEX)
@@ -57,9 +60,71 @@ class BENCHMARK_API Regex {
 #elif defined(HAVE_POSIX_REGEX) || defined(HAVE_GNU_POSIX_REGEX)
   regex_t re_;
 #else
-# error No regular expression backend implementation available
+#error No regular expression backend implementation available
 #endif
 };
+
+#if defined(HAVE_STD_REGEX)
+
+inline bool Regex::Init(const std::string& spec, std::string* error) {
+  try {
+    re_ = std::regex(spec, std::regex_constants::extended);
+
+    init_ = true;
+  } catch (const std::regex_error& e) {
+    if (error) {
+      *error = e.what();
+    }
+  }
+  return init_;
+}
+
+inline Regex::~Regex() {}
+
+inline bool Regex::Match(const std::string& str) {
+  if (!init_) {
+    return false;
+  }
+  return std::regex_search(str, re_);
+}
+
+#else
+inline bool Regex::Init(const std::string& spec, std::string* error) {
+  int ec = regcomp(&re_, spec.c_str(), REG_EXTENDED | REG_NOSUB);
+  if (ec != 0) {
+    if (error) {
+      size_t needed = regerror(ec, &re_, nullptr, 0);
+      char* errbuf = new char[needed];
+      regerror(ec, &re_, errbuf, needed);
+
+      // regerror returns the number of bytes necessary to null terminate
+      // the string, so we move that when assigning to error.
+      CHECK_NE(needed, 0);
+      error->assign(errbuf, needed - 1);
+
+      delete[] errbuf;
+    }
+
+    return false;
+  }
+
+  init_ = true;
+  return true;
+}
+
+inline Regex::~Regex() {
+  if (init_) {
+    regfree(&re_);
+  }
+}
+
+inline bool Regex::Match(const std::string& str) {
+  if (!init_) {
+    return false;
+  }
+  return regexec(&re_, str.c_str(), 0, nullptr, 0) == 0;
+}
+#endif
 
 }  // end namespace benchmark
 

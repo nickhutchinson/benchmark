@@ -13,6 +13,7 @@ endforeach()
 option(BENCHMARK_ENABLE_TESTING "Enable testing of the benchmark library." ON)
 option(BENCHMARK_ENABLE_LTO "Enable link time optimisation of the benchmark library." OFF)
 option(BENCHMARK_ENABLE_CXX11 "Whether to enable C++ mode" ON)
+option(BENCHMARK_USE_LIBCXX "Build and test using libc++ as the standard library." OFF)
 # Make sure we can import out CMake functions
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -103,20 +104,28 @@ else()
   endif ()
   add_cxx_compiler_flag(-Wshorten-64-to-32)
   add_cxx_compiler_flag(-Wfloat-equal)
-  if (BENCHMARK_ENABLE_CXX11)
-    add_cxx_compiler_flag(-Wzero-as-null-pointer-constant)
-  else ()
+  if (NOT BENCHMARK_ENABLE_CXX11)
     add_cxx_compiler_flag(-Wno-variadic-macros)
     add_cxx_compiler_flag(-Wno-long-long)
   endif ()
   add_cxx_compiler_flag(-fstrict-aliasing)
+  if (BENCHMARK_ENABLE_CXX11 AND NOT BENCHMARK_USE_LIBCXX)
+    add_cxx_compiler_flag(-Wzero-as-null-pointer-constant)
+  endif()
   if (HAVE_CXX_FLAG_FSTRICT_ALIASING)
     add_cxx_compiler_flag(-Wstrict-aliasing)
   endif()
   add_cxx_compiler_flag(-Wthread-safety)
-  if (HAVE_WTHREAD_SAFETY)
-    add_definitions(-DHAVE_WTHREAD_SAFETY)
+  if (HAVE_CXX_FLAG_WTHREAD_SAFETY)
     cxx_feature_check(THREAD_SAFETY_ATTRIBUTES)
+  endif()
+
+  # On most UNIX like platforms g++ and clang++ define _GNU_SOURCE as a
+  # predefined macro, which turns on all of the wonderful libc extensions.
+  # However g++ doesn't do this in Cygwin so we have to define it ourselfs
+  # since we depend on GNU/POSIX/BSD extensions.
+  if (CYGWIN)
+    add_definitions(-D_GNU_SOURCE=1)
   endif()
 
   # Link time optimisation
@@ -159,16 +168,37 @@ endif()
 add_cxx_compiler_flag(-fvisibility=hidden)
 add_cxx_compiler_flag(-fvisibility-inlines-hidden)
 
+if (BENCHMARK_USE_LIBCXX)
+  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    add_cxx_compiler_flag(-stdlib=libc++)
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
+          "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    add_cxx_compiler_flag(-nostdinc++)
+    message("libc++ header path must be manually specified using CMAKE_CXX_FLAGS")
+    # Adding -nodefaultlibs directly to CMAKE_<TYPE>_LINKER_FLAGS will break
+    # configuration checks such as 'find_package(Threads)'
+    list(APPEND BENCHMARK_CXX_LINKER_FLAGS -nodefaultlibs)
+    # -lc++ cannot be added directly to CMAKE_<TYPE>_LINKER_FLAGS because
+    # linker flags appear before all linker inputs and -lc++ must appear after.
+    list(APPEND BENCHMARK_CXX_LIBRARIES c++)
+  else()
+    message(FATAL "-DBENCHMARK_USE_LIBCXX:BOOL=ON is not supported for compiler")
+  endif()
+endif(BENCHMARK_USE_LIBCXX)
+
 # C++ feature checks
+# Determine the correct regular expression engine to use
 cxx_feature_check(STD_REGEX)
 cxx_feature_check(GNU_POSIX_REGEX)
 cxx_feature_check(POSIX_REGEX)
-cxx_feature_check(STEADY_CLOCK)
+if(NOT HAVE_STD_REGEX AND NOT HAVE_GNU_POSIX_REGEX AND NOT HAVE_POSIX_REGEX)
+  message(FATAL_ERROR "Failed to determine the source files for the regular expression backend")
+endif()
 
 cxx_feature_check(CXX11_NULLPTR)
 cxx_feature_check(CXX11_RANGE_BASED_FOR)
 cxx_feature_check(CXX11_STATIC_ASSERT)
-
+cxx_feature_check(STEADY_CLOCK)
 # Ensure we have pthreads
 find_package(Threads REQUIRED)
 

@@ -24,44 +24,35 @@
 
 #include "arraysize.h"
 #include "string_util.h"
-#include "walltime.h"
+#include "timers.h"
 
 // File format reference: http://edoceo.com/utilitas/csv-file-format.
 
 namespace benchmark {
 
 static const char* elements[] = {
-  "name",
-  "iterations",
-  "real_time",
-  "cpu_time",
-  "time_unit",
-  "bytes_per_second",
-  "items_per_second",
-  "label",
-  "error_occurred",
-  "error_message"
-};
+    "name",           "iterations",       "real_time",        "cpu_time",
+    "time_unit",      "bytes_per_second", "items_per_second", "label",
+    "error_occurred", "error_message"};
 
 bool CSVReporter::ReportContext(const Context& context) {
   PrintBasicContext(&GetErrorStream(), context);
 
   std::ostream& Out = GetOutputStream();
-  for (size_t i=0; i < arraysize(elements); ++i) {
+  for (size_t i = 0; i < arraysize(elements); ++i) {
     Out << elements[i];
-    if (i+1 != arraysize(elements))
-      Out << ",";
+    if (i + 1 != arraysize(elements)) Out << ",";
   }
   Out << "\n";
   return true;
 }
 
-void CSVReporter::ReportRuns(const std::vector<Run> & reports) {
+void CSVReporter::ReportRuns(const std::vector<Run>& reports) {
   foreach (const Run& run, reports)
     PrintRunData(run);
 }
 
-void CSVReporter::PrintRunData(const Run & run) {
+void CSVReporter::PrintRunData(const Run& run) {
   std::ostream& Out = GetOutputStream();
 
   // Field with embedded double-quote characters must be doubled and the field
