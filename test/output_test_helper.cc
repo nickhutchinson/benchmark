@@ -177,8 +177,8 @@ int AddCases(TestCaseID ID, const TestCase il[], size_t N) {
 int SetSubstitutions(const std::string il[][2], size_t N) {
   internal::SubMap& subs = internal::GetSubstitutions();
   for (size_t i = 0; i < N; ++i) {
-    const std::string(&KV)[2] = il[i];
     bool exists = false;
+    std::string KV[2] = {il[i][0], internal::PerformSubstitutions(il[i][1])};
     foreach (internal::SubMap::value_type& EKV, subs) {
       if (EKV.first == KV[0]) {
         EKV.second = KV[1];
