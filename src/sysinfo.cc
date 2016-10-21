@@ -87,6 +87,22 @@ bool ReadIntFromFile(const char* file, long* value) {
 }
 #endif
 
+#if defined BENCHMARK_OS_LINUX || defined BENCHMARK_OS_CYGWIN
+static std::string convertToLowerCase(std::string s) {
+  for (auto& ch : s)
+    ch = std::tolower(ch);
+  return s;
+}
+static bool startsWithKey(std::string Value, std::string Key,
+                          bool IgnoreCase = true) {
+  if (IgnoreCase) {
+    Key = convertToLowerCase(std::move(Key));
+    Value = convertToLowerCase(std::move(Value));
+  }
+  return Value.compare(0, Key.size(), Key) == 0;
+}
+#endif
+
 void InitializeSystemInfo() {
 #if defined BENCHMARK_OS_LINUX || defined BENCHMARK_OS_CYGWIN
   char line[1024];
@@ -160,21 +176,21 @@ void InitializeSystemInfo() {
     // When parsing the "cpu MHz" and "bogomips" (fallback) entries, we only
     // accept postive values. Some environments (virtual machines) report zero,
     // which would cause infinite looping in WallTime_Init.
-    if (!saw_mhz && strncasecmp(line, "cpu MHz", sizeof("cpu MHz") - 1) == 0) {
+    if (!saw_mhz && startsWithKey(line, "cpu MHz")) {
       const char* freqstr = strchr(line, ':');
       if (freqstr) {
         cpuinfo_cycles_per_second = strtod(freqstr + 1, &err) * 1000000.0;
         if (freqstr[1] != '\0' && *err == '\0' && cpuinfo_cycles_per_second > 0)
           saw_mhz = true;
       }
-    } else if (strncasecmp(line, "bogomips", sizeof("bogomips") - 1) == 0) {
+    } else if (startsWithKey(line, "bogomips")) {
       const char* freqstr = strchr(line, ':');
       if (freqstr) {
         bogo_clock = strtod(freqstr + 1, &err) * 1000000.0;
         if (freqstr[1] != '\0' && *err == '\0' && bogo_clock > 0)
           saw_bogo = true;
       }
-    } else if (strncmp(line, "processor", sizeof("processor") - 1) == 0) {
+    } else if (startsWithKey(line, "processor", /*IgnoreCase*/false)) {
       // The above comparison is case-sensitive because ARM kernels often
       // include a "Processor" line that tells you about the CPU, distinct
       // from the usual "processor" lines that give you CPU ids. No current
@@ -263,29 +279,24 @@ void InitializeSystemInfo() {
                                                     // group
 
 #elif defined BENCHMARK_OS_MACOSX
-  // returning "mach time units" per second. the current number of elapsed
-  // mach time units can be found by calling uint64 mach_absolute_time();
-  // while not as precise as actual CPU cycles, it is accurate in the face
-  // of CPU frequency scaling and multi-cpu/core machines.
-  // Our mac users have these types of machines, and accuracy
-  // (i.e. correctness) trumps precision.
-  // See cycleclock.h: CycleClock::Now(), which returns number of mach time
-  // units on Mac OS X.
-  mach_timebase_info_data_t timebase_info;
-  mach_timebase_info(&timebase_info);
-  double mach_time_units_per_nanosecond =
-      static_cast<double>(timebase_info.denom) /
-      static_cast<double>(timebase_info.numer);
-  cpuinfo_cycles_per_second = mach_time_units_per_nanosecond * 1e9;
-
-  int num_cpus = 0;
+  int32_t num_cpus = 0;
   size_t size = sizeof(num_cpus);
-  int numcpus_name[] = {CTL_HW, HW_NCPU};
-  if (::sysctl(numcpus_name, arraysize(numcpus_name), &num_cpus, &size, nullptr,
-               0) == 0 &&
-      (size == sizeof(num_cpus)))
+  if (::sysctlbyname("hw.ncpu", &num_cpus, &size, nullptr, 0) == 0 &&
+      (size == sizeof(num_cpus))) {
     cpuinfo_num_cpus = num_cpus;
-
+  } else {
+    fprintf(stderr, "%s\n", strerror(errno));
+    std::exit(EXIT_FAILURE);
+  }
+  int64_t cpu_freq = 0;
+  size = sizeof(cpu_freq);
+  if (::sysctlbyname("hw.cpufrequency", &cpu_freq, &size, nullptr, 0) == 0 &&
+      (size == sizeof(cpu_freq))) {
+    cpuinfo_cycles_per_second = cpu_freq;
+  } else {
+    fprintf(stderr, "%s\n", strerror(errno));
+    std::exit(EXIT_FAILURE);
+  }
 #else
   // Generic cycles per second counter
   cpuinfo_cycles_per_second = static_cast<double>(EstimateCyclesPerSecond());

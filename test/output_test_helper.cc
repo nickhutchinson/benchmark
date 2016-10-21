@@ -51,8 +51,12 @@ SubMap& GetSubstitutions() {
     map.push_back(std::make_pair("%time", "[ ]*[0-9]{1,5} ns"));
     map.push_back(std::make_pair(
         "%console_report", "[ ]*[0-9]{1,5} ns [ ]*[0-9]{1,5} ns [ ]*[0-9]+"));
+    map.push_back(std::make_pair("%console_us_report",
+                                 "[ ]*[0-9] us [ ]*[0-9] us [ ]*[0-9]+"));
     map.push_back(std::make_pair(
         "%csv_report", "[0-9]+," + dec_re + "," + dec_re + ",ns,,,,,"));
+    map.push_back(std::make_pair(
+        "%csv_us_report", "[0-9]+," + dec_re + "," + dec_re + ",us,,,,,"));
   }
   return map;
 }
