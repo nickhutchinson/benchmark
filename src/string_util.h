@@ -1,6 +1,7 @@
 #ifndef BENCHMARK_STRING_UTIL_H_
 #define BENCHMARK_STRING_UTIL_H_
 
+#include <cstdarg>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -13,6 +14,7 @@ void AppendHumanReadable(int n, std::string* str);
 std::string HumanReadableNumber(double n);
 
 std::string StringPrintF(const char* format, ...);
+std::string StringPrintF(const char* msg, va_list args);
 
 #ifndef BENCHMARK_NO_CXX11
 inline std::ostream& StringCatImp(std::ostream& out) BENCHMARK_NOEXCEPT {

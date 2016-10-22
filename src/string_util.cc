@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include <stdio.h>
+#include <algorithm>
 #include <cmath>
 #include <cstdarg>
 #include <memory>
@@ -10,6 +11,24 @@
 #include <vector>
 
 #include "arraysize.h"
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
+static int vsnprintf_compat(char* buf, size_t len, const char* fmt,
+                            va_list args) {
+  int ret;
+
+  va_list args_cp;
+  va_copy(args_cp, args);
+  ret = _vsnprintf_s(buf, len, _TRUNCATE, fmt, args_cp);
+  va_end(args_cp);
+
+  if (ret < 0) {
+    ret = _vscprintf(fmt, args);
+  }
+  return ret;
+}
+#define vsnprintf vsnprintf_compat
+#endif  // defined(_MSC_VER) && _MSC_VER < 1900
 
 namespace benchmark {
 namespace {
@@ -120,7 +139,7 @@ std::string HumanReadableNumber(double n) {
   return ToBinaryStringFullySpecified(n, 1.1, 1);
 }
 
-std::string StringPrintFImp(const char* msg, va_list args) {
+std::string StringPrintF(const char* msg, va_list args) {
   // we might need a second shot at this, so pre-emptivly make a copy
   va_list args_cp;
   va_copy(args_cp, args);
@@ -150,7 +169,7 @@ std::string StringPrintFImp(const char* msg, va_list args) {
 std::string StringPrintF(const char* format, ...) {
   va_list args;
   va_start(args, format);
-  std::string tmp = StringPrintFImp(format, args);
+  std::string tmp = StringPrintF(format, args);
   va_end(args);
   return tmp;
 }

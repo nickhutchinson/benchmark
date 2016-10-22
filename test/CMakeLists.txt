@@ -2,7 +2,7 @@
 
 find_package(Threads REQUIRED)
 
-if (NOT BENCHMARK_ENABLE_CXX11)
+if (NOT HAVE_CXX11_NULLPTR)
   add_definitions(-Dnullptr=NULL)
 endif()
 
@@ -29,12 +29,12 @@ endmacro(compile_output_test)
 
 # Demonstration executable
 compile_benchmark_test(benchmark_test)
-add_test(benchmark benchmark_test --benchmark_min_time=0.01)
+add_test(NAME benchmark COMMAND benchmark_test --benchmark_min_time=0.01)
 
 compile_benchmark_test(filter_test)
 macro(add_filter_test name filter expect)
-  add_test(${name} filter_test --benchmark_min_time=0.01 --benchmark_filter=${filter} ${expect})
-  add_test(${name}_list_only filter_test --benchmark_list_tests --benchmark_filter=${filter} ${expect})
+  add_test(NAME ${name} COMMAND filter_test --benchmark_min_time=0.01 --benchmark_filter=${filter} ${expect})
+  add_test(NAME ${name}_list_only COMMAND filter_test --benchmark_list_tests --benchmark_filter=${filter} ${expect})
 endmacro(add_filter_test)
 
 add_filter_test(filter_simple "Foo" 3)
@@ -48,45 +48,45 @@ add_filter_test(filter_regex_begin2 "^N" 1)
 add_filter_test(filter_regex_end ".*Ba$" 1)
 
 compile_benchmark_test(options_test)
-add_test(options_benchmarks options_test --benchmark_min_time=0.01)
+add_test(NAME options_benchmarks COMMAND options_test --benchmark_min_time=0.01)
 
 compile_benchmark_test(basic_test)
-add_test(basic_benchmark basic_test --benchmark_min_time=0.01)
+add_test(NAME basic_benchmark COMMAND basic_test --benchmark_min_time=0.01)
 
 compile_benchmark_test(diagnostics_test)
-add_test(diagnostics_test diagnostics_test --benchmark_min_time=0.01)
+add_test(NAME diagnostics_test COMMAND diagnostics_test --benchmark_min_time=0.01)
 
 compile_benchmark_test(skip_with_error_test)
-add_test(skip_with_error_test skip_with_error_test --benchmark_min_time=0.01)
+add_test(NAME skip_with_error_test COMMAND skip_with_error_test --benchmark_min_time=0.01)
 
 compile_benchmark_test(donotoptimize_test)
-add_test(donotoptimize_test donotoptimize_test --benchmark_min_time=0.01)
+add_test(NAME donotoptimize_test COMMAND donotoptimize_test --benchmark_min_time=0.01)
 
 compile_benchmark_test(fixture_test)
-add_test(fixture_test fixture_test --benchmark_min_time=0.01)
+add_test(NAME fixture_test COMMAND fixture_test --benchmark_min_time=0.01)
 
 compile_benchmark_test(map_test)
-add_test(map_test map_test --benchmark_min_time=0.01)
+add_test(NAME map_test COMMAND map_test --benchmark_min_time=0.01)
 
 compile_benchmark_test(register_benchmark_test)
-add_test(register_benchmark_test register_benchmark_test --benchmark_min_time=0.01)
+add_test(NAME register_benchmark_test COMMAND register_benchmark_test --benchmark_min_time=0.01)
 
 compile_output_test(reporter_output_test)
-add_test(reporter_output_test reporter_output_test --benchmark_min_time=0.01)
+add_test(NAME reporter_output_test COMMAND reporter_output_test --benchmark_min_time=0.01)
 
 compile_benchmark_test(multiple_ranges_test)
-add_test(multiple_ranges_test multiple_ranges_test --benchmark_min_time=0.01)
+add_test(NAME multiple_ranges_test COMMAND multiple_ranges_test --benchmark_min_time=0.01)
 
-check_cxx_compiler_flag(-std=c++03 BENCHMARK_HAS_CXX03_FLAG)
-if (BENCHMARK_HAS_CXX03_FLAG)
-  set(CXX03_FLAGS "${CMAKE_CXX_FLAGS}")
-  string(REPLACE "-std=c++11" "-std=c++03" CXX03_FLAGS "${CXX03_FLAGS}")
-  string(REPLACE "-std=c++0x" "-std=c++03" CXX03_FLAGS "${CXX03_FLAGS}")
+check_cxx_compiler_flag(-std=c++98 BENCHMARK_HAS_CXX98_FLAG)
+if (BENCHMARK_HAS_CXX98_FLAG)
+  set(CXX98_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98")
+  string(REPLACE "-std=c++11" "" CXX98_FLAGS "${CXX98_FLAGS}")
+  string(REPLACE "-std=c++0x" "" CXX98_FLAGS "${CXX98_FLAGS}")
 
   compile_benchmark_test(cxx03_test)
   set_target_properties(cxx03_test
-      PROPERTIES COMPILE_FLAGS "${CXX03_FLAGS}")
-  add_test(cxx03 cxx03_test --benchmark_min_time=0.01)
+      PROPERTIES COMPILE_FLAGS "${CXX98_FLAGS}")
+  add_test(NAME cxx03 COMMAND cxx03_test --benchmark_min_time=0.01)
 endif()
 
 # Attempt to work around flaky test failures when running on Appveyor servers.
@@ -96,7 +96,7 @@ else()
   set(COMPLEXITY_MIN_TIME "0.01")
 endif()
 compile_output_test(complexity_test)
-add_test(complexity_benchmark complexity_test --benchmark_min_time=${COMPLEXITY_MIN_TIME})
+add_test(NAME complexity_benchmark COMMAND complexity_test --benchmark_min_time=${COMPLEXITY_MIN_TIME})
 
 # Add the coverage command(s)
 if(CMAKE_BUILD_TYPE)

@@ -46,7 +46,7 @@ bool ConsoleReporter::ReportContext(const Context& context) {
   }
 #endif
   std::string str =
-      FormatString("%-*s %13s %13s %10s\n", static_cast<int>(name_field_width_),
+      StringPrintF("%-*s %13s %13s %10s\n", static_cast<int>(name_field_width_),
                    "Benchmark", "Time", "CPU", "Iterations");
   GetOutputStream() << str << std::string(str.length() - 1, '-') << "\n";
 
@@ -62,7 +62,7 @@ static void IgnoreColorPrint(std::ostream& out, LogColor, const char* fmt,
                              ...) {
   va_list args;
   va_start(args, fmt);
-  out << FormatString(fmt, args);
+  out << StringPrintF(fmt, args);
   va_end(args);
 }
 

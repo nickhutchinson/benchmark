@@ -1,7 +1,6 @@
 #include "benchmark/benchmark_api.h"
 
-#if !defined(BENCHMARK_NO_CXX11) && \
-    (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)
+#if !defined(BENCHMARK_NO_CXX11)
 #include <chrono>
 #include <mutex>
 #include <thread>
@@ -12,7 +11,8 @@ namespace this_thread = std::this_thread;
 #include <boost/thread.hpp>
 namespace chrono = boost::chrono;
 namespace this_thread = boost::this_thread;
-#endif
+#endif  // BENCHMARK_NO_CXX11
+
 void BM_basic(benchmark::State& state) {
   while (state.KeepRunning()) {
   }

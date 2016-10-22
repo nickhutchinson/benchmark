@@ -28,7 +28,6 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <thread>
 
 #ifndef BENCHMARK_NO_CXX11
 #include <atomic>

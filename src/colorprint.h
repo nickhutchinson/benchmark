@@ -17,9 +17,6 @@ enum LogColor {
   COLOR_WHITE
 };
 
-std::string FormatString(const char* msg, va_list args);
-std::string FormatString(const char* msg, ...);
-
 void ColorPrintf(std::ostream& out, LogColor color, const char* fmt,
                  va_list args);
 void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, ...);

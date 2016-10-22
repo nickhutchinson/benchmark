@@ -67,7 +67,7 @@ namespace BOOST_FOREACH = foreach;
 #endif
 #endif  // HAVE_CXX11_STATIC_ASSERT
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
+#if defined(_MSC_VER) && _MSC_VER < 1800
 #define va_copy(dest, src) ((dest) = (src))
 #endif
 

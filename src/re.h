@@ -17,8 +17,6 @@
 
 #if defined(HAVE_STD_REGEX)
 #include <regex>
-#elif defined(HAVE_BOOST_REGEX)
-#include <boost/regex.hpp>
 #elif defined(HAVE_GNU_POSIX_REGEX)
 #include <gnuregex.h>
 #elif defined(HAVE_POSIX_REGEX)
@@ -55,8 +53,6 @@ class BENCHMARK_API Regex {
 // Underlying regular expression object
 #if defined(HAVE_STD_REGEX)
   std::regex re_;
-#elif defined(HAVE_BOOST_REGEX)
-  boost::regex re_;
 #elif defined(HAVE_POSIX_REGEX) || defined(HAVE_GNU_POSIX_REGEX)
   regex_t re_;
 #else

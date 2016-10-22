@@ -17,7 +17,6 @@
 
 #ifdef BENCHMARK_OS_WINDOWS
 #include <Shlwapi.h>
-#include <VersionHelpers.h>
 #include <Windows.h>
 #else
 #include <fcntl.h>
@@ -35,15 +34,22 @@
 #endif
 #endif
 
+#include <stdint.h>
 #include <cerrno>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <iostream>
 #include <limits>
-#include <mutex>
+
+#if !defined(BENCHMARK_NO_CXX11)
+#include <chrono>
+namespace chrono = std::chrono;
+#else
+#include <boost/chrono.hpp>
+namespace chrono = boost::chrono;
+#endif  // !BENCHMARK_NO_CXX11
 
 #include "check.h"
 #include "log.h"
@@ -157,7 +163,7 @@ double ThreadCPUUsage() {
 namespace {
 
 std::string DateTimeString(bool local) {
-  typedef std::chrono::system_clock Clock;
+  typedef chrono::system_clock Clock;
   std::time_t now = Clock::to_time_t(Clock::now());
   const std::size_t kStorageSize = 128;
   char storage[kStorageSize];

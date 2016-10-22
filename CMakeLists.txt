@@ -30,6 +30,10 @@ message("-- Version: ${VERSION}")
 set(GENERIC_LIB_VERSION ${VERSION})
 string(SUBSTRING ${VERSION} 0 1 GENERIC_LIB_SOVERSION)
 
+# Save build-tree executable artefacts in a common location, e.g. so unit test
+# binaries on Windows can locate benchmark.dll adjacent to them.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${benchmark_BINARY_DIR}")
+
 # Import our CMake modules
 include(CheckCXXCompilerFlag)
 include(AddCXXCompilerFlag)
@@ -40,6 +44,11 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   string(REGEX REPLACE "[-/]W[1-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_compile_options(
+      -wd4251  # suppress: 'class 'X' needs to have dll-interface to be used by
+               # clients of class 'Y'; this almost always going to be a noisy
+               # false positive due to member variables from the STL.
+  )
 
   # Link time optimisation
   if (BENCHMARK_ENABLE_LTO)
@@ -69,24 +78,6 @@ else()
     if (NOT HAVE_CXX_FLAG_STD_CXX11)
       add_cxx_compiler_flag(-std=c++0x)
     endif()
-  else ()
-    add_cxx_compiler_flag(-std=gnu++98)
-    add_definitions(-DBENCHMARK_NO_CXX11)
-
-    find_package(Boost REQUIRED COMPONENTS atomic thread chrono regex system)
-    set(HAVE_BOOST_REGEX 1)
-    add_definitions(-DHAVE_BOOST_REGEX)
-    set(HAVE_BOOST_CHRONO 1)
-    add_definitions(-DHAVE_BOOST_CHRONO)
-
-    include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-    link_libraries(${Boost_LIBRARIES})
-
-    if (CMAKE_SYSTEM_NAME MATCHES Windows)
-      add_definitions(-DBOOST_ALL_NO_LIB)
-    elseif (CMAKE_SYSTEM_NAME MATCHES Linux)
-      link_libraries(-lrt)
-    endif ()
   endif ()
 
   # Turn compiler warnings up to 11
@@ -165,6 +156,23 @@ else()
     FORCE)
   add_cxx_compiler_flag(--coverage COVERAGE)
 endif()
+
+if (NOT BENCHMARK_ENABLE_CXX11)
+  # When we don't have C++11 available, we fall back to using equivalents from
+  # Boost.
+  add_definitions(-DBENCHMARK_NO_CXX11)
+
+  find_package(Boost REQUIRED COMPONENTS atomic thread chrono system)
+
+  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+  link_libraries(${Boost_LIBRARIES})
+
+  if (CMAKE_SYSTEM_NAME MATCHES Windows)
+    add_definitions(-DBOOST_ALL_NO_LIB)
+  elseif (CMAKE_SYSTEM_NAME MATCHES Linux)
+    link_libraries(-lrt)
+  endif ()
+endif ()
 
 add_cxx_compiler_flag(-fvisibility=hidden)
 add_cxx_compiler_flag(-fvisibility-inlines-hidden)

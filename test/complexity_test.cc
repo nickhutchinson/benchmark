@@ -7,6 +7,12 @@
 #include "benchmark/benchmark.h"
 #include "output_test.h"
 
+#if !defined(BENCHMARK_NO_CXX11)
+using std::log2;
+#elif defined(_MSC_VER) && _MSC_VER < 1900
+static double log2(double x) { return log(x) / log(2.0); }
+#endif
+
 namespace {
 
 #define ADD_COMPLEXITY_CASES(...) \
@@ -138,7 +144,7 @@ BENCHMARK(BM_Complexity_O_N_log_N)
     ->RangeMultiplier(2)
     ->Range(1 << 10, 1 << 16)
     ->Complexity(benchmark::oNLogN);
-static double oNLogN(int n) { return n * std::log2(n); }
+static double oNLogN(int n) { return n * log2(n); }
 BENCHMARK(BM_Complexity_O_N_log_N)
     ->RangeMultiplier(2)
     ->Range(1 << 10, 1 << 16)

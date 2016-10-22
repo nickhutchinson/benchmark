@@ -25,6 +25,8 @@
 
 #if !defined(BENCHMARK_NO_CXX11)
 using std::log2;
+#elif defined(_MSC_VER) && _MSC_VER < 1900
+static double log2(double x) { return log(x) / log(2.0); }
 #endif
 
 namespace benchmark {
@@ -33,8 +35,8 @@ namespace benchmark {
 BigOFunc* FittingCurve(BigO complexity) {
   struct Curves {
     static double oN(int n) { return n; };
-    static double oNSquared(int n) { return pow(n, 2); }
-    static double oNCubed(int n) { return pow(n, 3); }
+    static double oNSquared(int n) { return pow(static_cast<double>(n), 2); }
+    static double oNCubed(int n) { return pow(static_cast<double>(n), 3); }
     static double oLogN(int n) { return log2(n); };
     static double oNLogN(int n) { return n * log2(n); };
     static double o1(int) { return 1.0; };

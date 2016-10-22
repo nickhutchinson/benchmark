@@ -15,8 +15,7 @@
 #include <utility>
 #include <vector>
 
-#if !defined(BENCHMARK_NO_CXX11) && \
-    (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)
+#if !defined(BENCHMARK_NO_CXX11)
 #include <chrono>
 #include <mutex>
 #include <thread>
@@ -33,8 +32,7 @@ namespace this_thread = boost::this_thread;
 using boost::lock_guard;
 using boost::micro;
 using boost::mutex;
-#endif  // !defined(BENCHMARK_NO_CXX11) && (defined(__GXX_EXPERIMENTAL_CXX0X__)
-        // || __cplusplus >= 201103L)
+#endif  // !defined(BENCHMARK_NO_CXX11)
 
 #if defined(__GNUC__)
 #define BENCHMARK_NOINLINE __attribute__((noinline))

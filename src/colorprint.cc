@@ -24,6 +24,7 @@
 
 #include "check.h"
 #include "internal_macros.h"
+#include "string_util.h"
 
 #ifdef BENCHMARK_OS_WINDOWS
 #include <Windows.h>
@@ -83,42 +84,6 @@ PlatformColorCode GetPlatformColorCode(LogColor color) {
 
 }  // end namespace
 
-std::string FormatString(const char* msg, va_list args) {
-  // we might need a second shot at this, so pre-emptivly make a copy
-  va_list args_cp;
-  va_copy(args_cp, args);
-
-  std::size_t size = 256;
-  char local_buff[256];
-  int ret = std::vsnprintf(local_buff, size, msg, args_cp);
-
-  va_end(args_cp);
-
-  // currently there is no error handling for failure, so this is hack.
-  CHECK(ret >= 0);
-
-  if (ret == 0)  // handle empty expansion
-    return std::string();
-  else if (static_cast<size_t>(ret) < size)
-    return local_buff;
-  else {
-    // we did not provide a long enough buffer on our first attempt.
-    size = (size_t)ret + 1;  // + 1 for the null byte
-    std::vector<char> buff(size);
-    ret = std::vsnprintf(buff.data(), size, msg, args);
-    CHECK(ret > 0 && ((size_t)ret) < size);
-    return buff.data();
-  }
-}
-
-std::string FormatString(const char* msg, ...) {
-  va_list args;
-  va_start(args, msg);
-  std::string tmp = FormatString(msg, args);
-  va_end(args);
-  return tmp;
-}
-
 void ColorPrintf(std::ostream& out, LogColor color, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -151,8 +116,8 @@ void ColorPrintf(std::ostream& out, LogColor color, const char* fmt,
   SetConsoleTextAttribute(stdout_handle, old_color_attrs);
 #else
   const char* color_code = GetPlatformColorCode(color);
-  if (color_code) out << FormatString("\033[0;3%sm", color_code);
-  out << FormatString(fmt, args) << "\033[m";
+  if (color_code) out << StringPrintF("\033[0;3%sm", color_code);
+  out << StringPrintF(fmt, args) << "\033[m";
 #endif
 }
 
