@@ -89,15 +89,14 @@ bool ReadIntFromFile(const char* file, long* value) {
 
 #if defined BENCHMARK_OS_LINUX || defined BENCHMARK_OS_CYGWIN
 static std::string convertToLowerCase(std::string s) {
-  for (auto& ch : s)
-    ch = std::tolower(ch);
+  foreach (char& ch, s) ch = std::tolower(ch);
   return s;
 }
 static bool startsWithKey(std::string Value, std::string Key,
                           bool IgnoreCase = true) {
   if (IgnoreCase) {
-    Key = convertToLowerCase(std::move(Key));
-    Value = convertToLowerCase(std::move(Value));
+    Key = convertToLowerCase(Key);
+    Value = convertToLowerCase(Value);
   }
   return Value.compare(0, Key.size(), Key) == 0;
 }

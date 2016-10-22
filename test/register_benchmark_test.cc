@@ -90,7 +90,8 @@ int RegisterFromFunction() {
   return 0;
 }
 int dummy2 = RegisterFromFunction();
-ADD_CASES({"test1", "One"}, {"test2", "Two"}, {"test3", "Three"});
+ADD_CASES(TestCase("test1", "One"), TestCase("test2", "Two"),
+          TestCase("test3", "Three"));
 
 #endif  // BENCHMARK_HAS_NO_VARIADIC_REGISTER_BENCHMARK
 
@@ -110,7 +111,7 @@ void TestRegistrationAtRuntime() {
   {
     CustomFixture fx;
     benchmark::RegisterBenchmark("custom_fixture", fx);
-    AddCases({"custom_fixture"});
+    ADD_CASES(TestCase("custom_fixture"));
   }
 #endif
 #ifndef BENCHMARK_HAS_NO_VARIADIC_REGISTER_BENCHMARK
@@ -122,7 +123,7 @@ void TestRegistrationAtRuntime() {
       st.SetLabel(std::to_string(x));
     };
     benchmark::RegisterBenchmark("lambda_benchmark", capturing_lam);
-    AddCases({{"lambda_benchmark", "42"}});
+    ADD_CASES(TestCase("lambda_benchmark", "42"));
   }
 #endif
 }
