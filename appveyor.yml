@@ -4,11 +4,15 @@ configuration:
   - Debug
   - Release
 
+cache:
+  - _deps -> appveyor.yml
+  - _deps -> .appveyor_setup.sh
+
 environment:
   matrix:
     - compiler: msvc-10-seh
       generator: "Visual Studio 10 2010 Win64"
-      extra_cmake_args: '-DBOOST_INCLUDEDIR=%APPVEYOR_BUILD_FOLDER%\_deps\boost -DBOOST_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\_deps\boost\lib64-msvc-10.0 -DBoost_USE_STATIC_LIBS=1 -DBENCHMARK_ENABLE_CXX11=0'
+      extra_cmake_args: '-DBOOST_INCLUDEDIR=%APPVEYOR_BUILD_FOLDER%\_deps\boost_1_56_0-msvc-10.0-64 -DBOOST_LIBRARYDIR=%APPVEYOR_BUILD_FOLDER%\_deps\boost_1_56_0-msvc-10.0-64\lib64-msvc-10.0 -DBoost_USE_STATIC_LIBS=1 -DBENCHMARK_ENABLE_CXX11=0'
 
     - compiler: msvc-12-seh
       generator: "Visual Studio 12 2013"
@@ -32,20 +36,10 @@ matrix:
   fast_finish: true
 
 install:
+  - sh .appveyor_setup.sh
   # git bash conflicts with MinGW makefiles
   - if "%generator%"=="MinGW Makefiles" (set "PATH=%PATH:C:\Program Files\Git\usr\bin;=%")
   - if not "%cxx_path%"=="" (set "PATH=%PATH%;%cxx_path%")
-  # Download and extract a MSVC10-friendly Boost.
-  - ps: >-
-      if ($env:compiler.StartsWith("msvc-10")) {
-        mkdir _deps
-        pushd _deps
-        cinst innoextract
-        Start-FileDownload 'http://netix.dl.sourceforge.net/project/boost/boost-binaries/1.56.0/boost_1_56_0-msvc-10.0-64.exe'
-        innoextract boost_1_56_0-msvc-10.0-64.exe -I boost -I lib64-msvc-10.0 -s -p
-        mv app boost
-        popd
-      }
 
 # TODO Remove this. This is a hack to work around bogus warning messages
 # See http://goo.gl/euguBI for more information.
