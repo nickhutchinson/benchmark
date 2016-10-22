@@ -221,7 +221,7 @@ BENCHMARK_API void UseCharPointer(char const volatile*);
 BENCHMARK_API Benchmark* RegisterBenchmarkInternal(Benchmark*);
 
 // Ensure that the standard streams are properly initialized in every TU.
-int InitializeStreams();
+BENCHMARK_API int InitializeStreams();
 BENCHMARK_UNUSED static int stream_init_anchor = InitializeStreams();
 
 }  // end namespace internal
@@ -610,7 +610,6 @@ class BENCHMARK_API Benchmark {
 
  protected:
   explicit Benchmark(const char* name);
-  Benchmark(Benchmark const&);
   void SetName(const char* name);
 
   int ArgsCnt() const;
@@ -633,6 +632,7 @@ class BENCHMARK_API Benchmark {
   BigOFunc* complexity_lambda_;
   std::vector<int> thread_counts_;
 
+  Benchmark(Benchmark const&);
   Benchmark& operator=(Benchmark const&);
 };
 

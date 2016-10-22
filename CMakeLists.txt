@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 2.8.11)
 project (benchmark)
 
 foreach(p
+    CMP0042 # MACOSX_RPATH is enabled by default.
     CMP0054 # CMake 3.1
     CMP0056 # export EXE_LINKER_FLAGS to try_run
     )

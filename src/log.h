@@ -12,8 +12,8 @@ namespace internal {
 typedef std::basic_ostream<char>&(EndLType)(std::basic_ostream<char>&);
 
 class LogType {
-  friend LogType& GetNullLogInstance();
-  friend LogType& GetErrorLogInstance();
+  friend BENCHMARK_API LogType& GetNullLogInstance();
+  friend BENCHMARK_API LogType& GetErrorLogInstance();
 
   // FIXME: Add locking to output.
   template <class Tp>
