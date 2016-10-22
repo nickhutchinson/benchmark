@@ -35,7 +35,6 @@ if [ "$STD" = "c++03" ]; then
         libboost1.55-dev        \
         libboost-atomic1.55-dev \
         libboost-chrono1.55-dev \
-        libboost-regex1.55-dev  \
         libboost-system1.55-dev \
         libboost-thread1.55-dev
 fi
