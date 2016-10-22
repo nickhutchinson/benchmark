@@ -1,6 +1,5 @@
 # benchmark
 [![Build Status](https://travis-ci.org/nickhutchinson/benchmark-cxx03.svg?branch=master)](https://travis-ci.org/nickhutchinson/benchmark-cxx03)
-[![Build status](https://ci.appveyor.com/api/projects/status/u0qsyp7t1tk7cpxs/branch/master?svg=true)](https://ci.appveyor.com/project/google/benchmark/branch/master)
 [![Build status](https://ci.appveyor.com/api/projects/status/sm20c9vw4xttct4u?svg=true)](https://ci.appveyor.com/project/nickhutchinson/benchmark-cxx03)
 <!--[![Coverage Status](https://coveralls.io/repos/google/benchmark/badge.svg)](https://coveralls.io/r/google/benchmark)-->
 
