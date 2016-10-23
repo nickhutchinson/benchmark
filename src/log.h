@@ -41,20 +41,9 @@ inline LogType& operator<<(LogType& log, EndLType* m) {
   return log;
 }
 
-BENCHMARK_API inline int& LogLevel() {
-  static int log_level = 0;
-  return log_level;
-}
-
-BENCHMARK_API inline LogType& GetNullLogInstance() {
-  static LogType log(nullptr);
-  return log;
-}
-
-BENCHMARK_API inline LogType& GetErrorLogInstance() {
-  static LogType log(&std::clog);
-  return log;
-}
+BENCHMARK_API int& LogLevel();
+BENCHMARK_API LogType& GetNullLogInstance();
+BENCHMARK_API LogType& GetErrorLogInstance();
 
 inline LogType& GetLogInstanceForLevel(int level) {
   if (level <= LogLevel()) {
