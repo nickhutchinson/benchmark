@@ -16,9 +16,13 @@ add_library(benchmark ${SOURCE_FILES})
 set_target_properties(benchmark PROPERTIES
   OUTPUT_NAME benchmark-cxx03
   DEFINE_SYMBOL BENCHMARK_BUILDING_BENCHMARK
-  VERSION ${GENERIC_LIB_VERSION}
-  SOVERSION ${GENERIC_LIB_SOVERSION}
 )
+if (NOT "${VERSION}" MATCHES "^0+(\\.0+)*$")
+  set_target_properties(benchmark PROPERTIES
+    VERSION ${GENERIC_LIB_VERSION}
+    SOVERSION ${GENERIC_LIB_SOVERSION}
+  )
+endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES Windows)
   if (BUILD_SHARED_LIBS)
