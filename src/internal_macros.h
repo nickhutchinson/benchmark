@@ -17,7 +17,7 @@
 
 #if __has_feature(cxx_attributes)
 #define BENCHMARK_NORETURN [[noreturn]]
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 #define BENCHMARK_NORETURN __attribute__((noreturn))
 #elif defined(COMPILER_MSVC)
 #define BENCHMARK_NORETURN __declspec(noreturn)
@@ -59,7 +59,7 @@ namespace BOOST_FOREACH = foreach;
 #if !defined(HAVE_CXX11_STATIC_ASSERT)
 #include <boost/static_assert.hpp>
 #undef static_assert
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define static_assert(cond, msg) BOOST_STATIC_ASSERT_MSG(( \
     cond), (msg)) __attribute__((unused))
 #else

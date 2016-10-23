@@ -34,7 +34,7 @@ using boost::micro;
 using boost::mutex;
 #endif  // !defined(BENCHMARK_NO_CXX11)
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define BENCHMARK_NOINLINE __attribute__((noinline))
 #else
 #define BENCHMARK_NOINLINE

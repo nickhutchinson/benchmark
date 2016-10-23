@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 namespace {
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 uint64_t double_up(const uint64_t x) __attribute__((const));
 #endif
 uint64_t double_up(const uint64_t x) { return x * 2; }

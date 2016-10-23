@@ -59,7 +59,7 @@ namespace chrono = boost::chrono;
 namespace benchmark {
 
 // Suppress unused warnings on helper functions.
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 

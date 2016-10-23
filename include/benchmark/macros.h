@@ -28,7 +28,7 @@
   TypeName& operator=(const TypeName&) = delete
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define BENCHMARK_UNUSED __attribute__((unused))
 #define BENCHMARK_ALWAYS_INLINE __attribute__((always_inline))
 #if __cplusplus >= 201103L
@@ -38,7 +38,7 @@
 #define BENCHMARK_NOEXCEPT throw()
 #define BENCHMARK_NOEXCEPT_OP(x)
 #endif  // __cplusplus >= 201103L
-#elif defined(_MSC_VER) && !defined(__clang__)
+#elif defined(_MSC_VER)
 #define BENCHMARK_UNUSED
 #define BENCHMARK_ALWAYS_INLINE __forceinline
 #if _MSC_VER >= 1900
@@ -56,7 +56,7 @@
 #define BENCHMARK_NOEXCEPT_OP(x)
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define BENCHMARK_BUILTIN_EXPECT(x, y) __builtin_expect(x, y)
 #else
 #define BENCHMARK_BUILTIN_EXPECT(x, y) x
