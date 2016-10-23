@@ -58,9 +58,20 @@
 
 #if defined(__GNUC__)
 #define BENCHMARK_BUILTIN_EXPECT(x, y) __builtin_expect(x, y)
-#define BENCHMARK_DEPRECATED_MSG(msg) __attribute__((deprecated(msg)))
 #else
 #define BENCHMARK_BUILTIN_EXPECT(x, y) x
+#endif
+
+#if (defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ > 404)) || defined(__clang__)
+#elif defined(__GNUC__)
+#define BENCHMARK_DEPRECATED_MSG(msg) __attribute__((deprecated()))
+#endif
+
+#if (defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ > 404)) || defined(__clang__)
+#define BENCHMARK_DEPRECATED_MSG(msg) __attribute__((deprecated(msg)))
+#elif defined(__GNUC__)
+#define BENCHMARK_DEPRECATED_MSG(msg) __attribute__((deprecated()))
+#else
 #define BENCHMARK_DEPRECATED_MSG(msg)
 #endif
 

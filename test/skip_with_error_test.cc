@@ -14,7 +14,7 @@ class TestReporter : public benchmark::ConsoleReporter {
   };
 
   virtual void ReportRuns(const std::vector<Run>& report) {
-    all_runs_.insert(all_runs_.end(), begin(report), end(report));
+    all_runs_.insert(all_runs_.end(), report.begin(), report.end());
     ConsoleReporter::ReportRuns(report);
   }
 

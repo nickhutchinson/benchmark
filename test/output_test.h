@@ -2,10 +2,16 @@
 #define TEST_OUTPUT_TEST_H
 
 #undef NDEBUG
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+
+#ifndef BENCHMARK_NO_CXX11
+#include <memory>
+#else
+#include <boost/shared_ptr.hpp>
+#endif
+
 #include "../src/re.h"
 #include "benchmark/benchmark.h"
 
@@ -35,7 +41,11 @@ struct TestCase {
   std::string regex_str;
   int match_rule;
   std::string substituted_regex;
+#ifndef BENCHMARK_NO_CXX11
   std::shared_ptr<benchmark::Regex> regex;
+#else
+  boost::shared_ptr<benchmark::Regex> regex;
+#endif  // BENCHMARK_NO_CXX11
 };
 
 enum TestCaseID {

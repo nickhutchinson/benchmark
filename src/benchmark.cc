@@ -36,6 +36,7 @@
 #include <thread>
 #else
 #include <boost/atomic.hpp>
+#include <boost/container/vector.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #endif
@@ -105,10 +106,12 @@ namespace detail {
 using std::atomic;
 using std::thread;
 using std::shared_ptr;
+typedef std::vector<std::thread> ThreadVector;
 #else
 using boost::atomic;
 using boost::thread;
 using boost::shared_ptr;
+typedef boost::container::vector<boost::thread> ThreadVector;
 #endif
 }  // end namespace detail
 
@@ -316,7 +319,7 @@ std::vector<BenchmarkReporter::Run> RunBenchmark(
 
   size_t iters = 1;
   detail::shared_ptr<internal::ThreadManager> manager;
-  std::vector<detail::thread> pool(b.threads - 1);
+  detail::ThreadVector pool(b.threads - 1);
   const int repeats =
       b.repetitions != 0 ? b.repetitions : FLAGS_benchmark_repetitions;
   const bool report_aggregates_only =
@@ -599,7 +602,7 @@ size_t RunSpecifiedBenchmarks(BenchmarkReporter* console_reporter,
     std::exit(1);
   }
   if (fname != "") {
-    output_file.open(fname);
+    output_file.open(fname.c_str());
     if (!output_file.is_open()) {
       Err << "invalid file name: '" << fname << std::endl;
       std::exit(1);

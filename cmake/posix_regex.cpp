@@ -7,7 +7,7 @@ int main() {
   if (ec != 0) {
     return ec;
   }
-  int ret = regexec(&re, str.c_str(), 0, nullptr, 0) ? -1 : 0;
+  int ret = regexec(&re, str.c_str(), 0, NULL, 0) ? -1 : 0;
   regfree(&re);
   return ret;
 }

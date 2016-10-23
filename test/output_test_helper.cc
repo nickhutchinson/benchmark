@@ -8,6 +8,7 @@
 #ifndef BENCHMARK_NO_CXX11
 #include <memory>
 #else
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 #endif
 
@@ -16,8 +17,10 @@
 // ========================================================================= //
 #ifndef BENCHMARK_NO_CXX11
 using std::shared_ptr;
+using std::make_shared;
 #else
 using boost::shared_ptr;
+using boost::make_shared;
 #endif
 
 namespace internal {
@@ -160,10 +163,10 @@ class TestReporter : public benchmark::BenchmarkReporter {
 // ========================================================================= //
 
 TestCase::TestCase(std::string re, int rule)
-    : regex_str(std::move(re)),
+    : regex_str(re),
       match_rule(rule),
       substituted_regex(internal::PerformSubstitutions(regex_str)),
-      regex(std::make_shared<benchmark::Regex>()) {
+      regex(make_shared<benchmark::Regex>()) {
   std::string err_str;
   regex->Init(substituted_regex, &err_str);
   CHECK(err_str.empty()) << "Could not construct regex \"" << substituted_regex

@@ -105,7 +105,7 @@ BenchmarkFamilies* BenchmarkFamilies::GetInstance() {
 size_t BenchmarkFamilies::AddBenchmark(detail::shared_ptr<Benchmark> family) {
   MutexLock l(mutex_);
   size_t index = families_.size();
-  families_.push_back(std::move(family));
+  families_.push_back(family);
   return index;
 }
 
@@ -188,7 +188,7 @@ bool BenchmarkFamilies::FindBenchmarks(
 
         if (re.Match(instance.name)) {
           instance.last_benchmark_instance = (&args == &family->args_.back());
-          benchmarks->push_back(std::move(instance));
+          benchmarks->push_back(instance);
         }
       }
     }
@@ -199,7 +199,7 @@ bool BenchmarkFamilies::FindBenchmarks(
 Benchmark* RegisterBenchmarkInternal(Benchmark* bench) {
   detail::shared_ptr<Benchmark> bench_ptr(bench);
   BenchmarkFamilies* families = BenchmarkFamilies::GetInstance();
-  families->AddBenchmark(std::move(bench_ptr));
+  families->AddBenchmark(bench_ptr);
   return bench;
 }
 
@@ -285,14 +285,13 @@ Benchmark* Benchmark::Ranges(const std::vector<std::pair<int, int> >& ranges) {
   std::vector<std::size_t> ctr(arglists.size(), 0);
 
   for (std::size_t i = 0; i < total; i++) {
-    std::vector<int> tmp;
-    tmp.reserve(arglists.size());
+    args_.push_back(std::vector<int>());
+    std::vector<int>& entry = args_.back();
+    entry.reserve(arglists.size());
 
     for (std::size_t j = 0; j < arglists.size(); j++) {
-      tmp.push_back(arglists[j].at(ctr[j]));
+      entry.push_back(arglists[j].at(ctr[j]));
     }
-
-    args_.push_back(std::move(tmp));
 
     for (std::size_t j = 0; j < arglists.size(); j++) {
       if (ctr[j] + 1 < arglists[j].size()) {

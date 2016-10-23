@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "log.h"
+#include "internal_macros.h"
 
 #include <iostream>
 
