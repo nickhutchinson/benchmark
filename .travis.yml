@@ -6,8 +6,6 @@ env:
   global:
     - /usr/local/bin:$PATH
 
-# NOTE: The COMPILER variable is unused. It simply makes the display on
-# travis-ci.org more readable.
 matrix:
     include:
         - compiler: gcc
@@ -20,10 +18,41 @@ matrix:
           env: COMPILER=g++ C_COMPILER=gcc           BUILD_TYPE=Debug
         - compiler: gcc
           env: COMPILER=g++ C_COMPILER=gcc           BUILD_TYPE=Release
+
+        # C++03 configs
         - compiler: gcc
-          env: COMPILER=g++ C_COMPILER=gcc STD=C++03 BUILD_TYPE=Debug
+          env: COMPILER=g++ C_COMPILER=gcc STD=c++03 BUILD_TYPE=Debug
+          addons:
+            apt:
+              packages: [
+                libboost1.55-dev, libboost-atomic1.55-dev,
+                libboost-chrono1.55-dev, libboost-system1.55-dev,
+                libboost-thread1.55-dev]
         - compiler: gcc
-          env: COMPILER=g++ C_COMPILER=gcc STD=C++03 BUILD_TYPE=Release
+          env: COMPILER=g++ C_COMPILER=gcc STD=c++03 BUILD_TYPE=Release
+          addons:
+            apt:
+              packages: [
+                libboost1.55-dev, libboost-atomic1.55-dev,
+                libboost-chrono1.55-dev, libboost-system1.55-dev,
+                libboost-thread1.55-dev]
+        - compiler: gcc
+          env: COMPILER=g++-4.4 C_COMPILER=gcc-4.4 STD=c++03 BUILD_TYPE=Debug
+          addons:
+            apt:
+              packages: [
+                g++-4.4, libboost1.55-dev, libboost-atomic1.55-dev,
+                libboost-chrono1.55-dev, libboost-system1.55-dev,
+                libboost-thread1.55-dev]
+        - compiler: gcc
+          env: COMPILER=g++-4.4 C_COMPILER=gcc-4.4 STD=c++03 BUILD_TYPE=Release
+          addons:
+            apt:
+              packages: [
+                g++-4.4, libboost1.55-dev, libboost-atomic1.55-dev,
+                libboost-chrono1.55-dev, libboost-system1.55-dev,
+                libboost-thread1.55-dev]
+
         - compiler: gcc
           addons:
             apt:
@@ -115,5 +144,3 @@ after_success:
   - if [ "${BUILD_TYPE}" == "Coverage" -a "${TRAVIS_OS_NAME}" == "linux" ]; then
       coveralls --include src --include include --gcov-options '\-lp' --root .. --build-root .;
     fi
-
-sudo: required
