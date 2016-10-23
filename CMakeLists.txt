@@ -164,6 +164,7 @@ if (NOT BENCHMARK_ENABLE_CXX11)
 
   find_package(Boost REQUIRED COMPONENTS atomic thread chrono system)
 
+  add_definitions(-DBOOST_THREAD_VERSION=4) # Use more C++11-conforming behaviour
   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
   link_libraries(${Boost_LIBRARIES})
 
