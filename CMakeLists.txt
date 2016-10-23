@@ -176,7 +176,13 @@ if (NOT BENCHMARK_ENABLE_CXX11)
 endif ()
 
 add_cxx_compiler_flag(-fvisibility=hidden)
-add_cxx_compiler_flag(-fvisibility-inlines-hidden)
+
+# `-fvisibility-inlines-hidden` was buggy in < GCC 4.2. We do not try adding it
+# in this case. See e.g. https://bugs.launchpad.net/ubuntu/+source/gcc-4.1/+bug/109262
+if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+    OR NOT "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 4.2)
+  add_cxx_compiler_flag(-fvisibility-inlines-hidden)
+endif ()
 
 if (BENCHMARK_USE_LIBCXX)
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
