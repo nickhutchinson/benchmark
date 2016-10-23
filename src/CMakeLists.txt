@@ -14,14 +14,18 @@ file(GLOB
 
 add_library(benchmark ${SOURCE_FILES})
 set_target_properties(benchmark PROPERTIES
-  OUTPUT_NAME "benchmark"
   DEFINE_SYMBOL BENCHMARK_BUILDING_BENCHMARK
   VERSION ${GENERIC_LIB_VERSION}
   SOVERSION ${GENERIC_LIB_SOVERSION}
 )
 
-if (CMAKE_SYSTEM_NAME MATCHES Windows AND BUILD_SHARED_LIBS)
-  target_compile_definitions(benchmark PUBLIC -DBENCHMARK_DLL)
+if (CMAKE_SYSTEM_NAME MATCHES Windows)
+  if (BUILD_SHARED_LIBS)
+    target_compile_definitions(benchmark PUBLIC -DBENCHMARK_DLL)
+  else ()
+    # Disambiguate static lib vs implib for the DLL.
+    set_target_properties(benchmark PROPERTIES OUTPUT_NAME benchmark-static)
+  endif ()
 endif ()
 
 # Link threads.
