@@ -14,6 +14,7 @@ file(GLOB
 
 add_library(benchmark ${SOURCE_FILES})
 set_target_properties(benchmark PROPERTIES
+  OUTPUT_NAME benchmark-cxx03
   DEFINE_SYMBOL BENCHMARK_BUILDING_BENCHMARK
   VERSION ${GENERIC_LIB_VERSION}
   SOVERSION ${GENERIC_LIB_SOVERSION}
@@ -24,7 +25,8 @@ if (CMAKE_SYSTEM_NAME MATCHES Windows)
     target_compile_definitions(benchmark PUBLIC -DBENCHMARK_DLL)
   else ()
     # Disambiguate static lib vs implib for the DLL.
-    set_target_properties(benchmark PROPERTIES OUTPUT_NAME benchmark-static)
+    set_target_properties(benchmark PROPERTIES
+      OUTPUT_NAME benchmark-cxx03-static)
   endif ()
 endif ()
 
