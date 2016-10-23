@@ -94,14 +94,21 @@ install:
     fi
 
 script:
-    - cmake                                                               \
-        -DCMAKE_C_COMPILER=${C_COMPILER}                                  \
-        -DCMAKE_CXX_COMPILER=${COMPILER}                                  \
-        -DCMAKE_BUILD_TYPE=${BUILD_TYPE}                                  \
-        -DCMAKE_CXX_FLAGS="${EXTRA_FLAGS}"                                \
-        -DBENCHMARK_ENABLE_CXX11=$(test $STD = c++03 && echo 0 || echo 1) \
-        -DBUILD_SHARED_LIBS=1 ..
-    - make
+    - cmake
+        -DCMAKE_C_COMPILER=${C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${COMPILER}
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+        -DCMAKE_CXX_FLAGS="${EXTRA_FLAGS}"
+        -DBENCHMARK_ENABLE_CXX11=$(test $STD = c++03 && echo 0 || echo 1)
+        ..
+    - cmake --build .
+    - DESTDIR=$PWD/staging cmake --build . --target install
+
+    # Once more, with feeling.
+    - cmake -DBUILD_SHARED_LIBS=1 ..
+    - cmake --build .
+    - DESTDIR=$PWD/staging cmake --build . --target install
+
     - make CTEST_OUTPUT_ON_FAILURE=1 test
 
 after_success:
