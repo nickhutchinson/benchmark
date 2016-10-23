@@ -14,6 +14,19 @@ environment:
   CTEST_OUTPUT_ON_FAILURE: '1'
 
   matrix:
+    - COMPILER: clang-39
+      TARGET: x86_64-pc-windows-msvc19.0.0
+      PATH: '%APPVEYOR_BUILD_FOLDER%\_deps\bin;%PATH%'
+      CC: clang-cl
+      CXX: clang-cl
+      VS: '"%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64'
+
+    - COMPILER: mingw-w64-53
+      TARGET: i686-pc-windows-gnu
+      PATH: '%APPVEYOR_BUILD_FOLDER%\_deps\bin;%PATH%;C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin'
+      CC: 'C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin\gcc.exe'
+      CXX: 'C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin\g++.exe'
+
     - COMPILER: msvc-19
       TARGET: x86_64-pc-windows-msvc19.0.0
       PATH: '%APPVEYOR_BUILD_FOLDER%\_deps\bin;%PATH%'
