@@ -435,8 +435,6 @@ class BENCHMARK_API State {
 
   int complexity_n_;
 
- public:
-  // FIXME: Make this private somehow.
   bool error_occurred_;
 
  public:
@@ -514,6 +512,13 @@ class BENCHMARK_API Benchmark {
   // REQUIRES: The function passed to the constructor must accept arg1, arg2 ...
   Benchmark* Ranges(const std::vector<std::pair<int, int> >& ranges);
 
+  // Equivalent to ArgNames({name})
+  Benchmark* ArgName(const std::string& name);
+
+  // Set the argument names to display in the benchmark name. If not called,
+  // only argument values will be shown.
+  Benchmark* ArgNames(const std::vector<std::string>& names);
+
   // Equivalent to Ranges({{lo1, hi1}, {lo2, hi2}}).
   // NOTE: This is a legacy C++03 interface provided for compatibility only.
   //   New code should use 'Ranges'.
@@ -530,8 +535,7 @@ class BENCHMARK_API Benchmark {
   Benchmark* Apply(void (*func)(Benchmark* benchmark));
 
   // Set the range multiplier for non-dense range. If not called, the range
-  // multiplier
-  // kRangeMultiplier will be used.
+  // multiplier kRangeMultiplier will be used.
   Benchmark* RangeMultiplier(int multiplier);
 
   // Set the minimum amount of time to use when running this benchmark. This
@@ -621,6 +625,7 @@ class BENCHMARK_API Benchmark {
 
   std::string name_;
   ReportMode report_mode_;
+  std::vector<std::string> arg_names_;   // Args for all benchmark runs
   std::vector<std::vector<int> > args_;  // Args for all benchmark runs
   TimeUnit time_unit_;
   int range_multiplier_;
