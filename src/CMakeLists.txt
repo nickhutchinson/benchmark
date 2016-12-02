@@ -24,14 +24,14 @@ if (NOT "${VERSION}" MATCHES "^0+(\\.0+)*$")
   )
 endif ()
 
-if (CMAKE_SYSTEM_NAME MATCHES Windows)
-  if (BUILD_SHARED_LIBS)
-    target_compile_definitions(benchmark PUBLIC -DBENCHMARK_DLL)
-  else ()
-    # Disambiguate static lib vs implib for the DLL.
-    set_target_properties(benchmark PROPERTIES
-      OUTPUT_NAME benchmark-cxx03-static)
-  endif ()
+if (BUILD_SHARED_LIBS)
+  target_compile_definitions(benchmark PUBLIC -DBENCHMARK_DLL)
+endif ()
+
+if (CMAKE_SYSTEM_NAME MATCHES Windows AND NOT BUILD_SHARED_LIBS)
+  # Disambiguate static lib vs implib for the DLL.
+  set_target_properties(benchmark PROPERTIES
+    OUTPUT_NAME benchmark-cxx03-static)
 endif ()
 
 # Link threads.

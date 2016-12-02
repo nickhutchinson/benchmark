@@ -80,11 +80,11 @@
 #endif
 
 #ifndef BENCHMARK_API
-#if !defined(_WIN32)
+#if !defined(_WIN32) && defined(BENCHMARK_DLL)
 #define BENCHMARK_API __attribute__((visibility("default")))
-#elif defined(BENCHMARK_DLL) && defined(BENCHMARK_BUILDING_BENCHMARK)
+#elif defined(_WIN32) && defined(BENCHMARK_DLL) && defined(BENCHMARK_BUILDING_BENCHMARK)
 #define BENCHMARK_API __declspec(dllexport)
-#elif defined(BENCHMARK_DLL)
+#elif defined(_WIN32) && defined(BENCHMARK_DLL)
 #define BENCHMARK_API __declspec(dllimport)
 #else
 #define BENCHMARK_API
