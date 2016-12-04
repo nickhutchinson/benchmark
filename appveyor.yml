@@ -1,5 +1,8 @@
 version: '{build}'
 
+# FIXME(NH): Workaround for https://github.com/appveyor/ci/issues/1202
+image: Previous Visual Studio 2015
+
 clone_depth: 100
 
 configuration:
